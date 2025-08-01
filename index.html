@@ -1,147 +1,79 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>考研倒计时学习助手</title>
-  <style>
-    body {
-      font-family: "Helvetica Neue", sans-serif;
-      background-color: #f4f4f4;
-      margin: 0;
-      padding: 2em;
-      color: #333;
-    }
-    h1 {
-      text-align: center;
-      color: #2c3e50;
-    }
-    #countdown {
-      font-size: 2em;
-      text-align: center;
-      margin-bottom: 1.5em;
-    }
-    .task-container, .schedule-container {
-      max-width: 700px;
-      margin: 2em auto;
-      background-color: #fff;
-      border-radius: 12px;
-      padding: 2em;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-    .task, .time-block {
-      display: flex;
-      align-items: center;
-      margin-bottom: 1em;
-      font-size: 1.1em;
-    }
-    .task input[type="checkbox"] {
-      margin-right: 0.75em;
-      transform: scale(1.3);
-    }
-    .footer {
-      text-align: center;
-      margin-top: 2em;
-      color: #888;
-      font-size: 0.9em;
-    }
-    .reset-button {
-      display: block;
-      margin: 1em auto;
-      padding: 0.5em 1.5em;
-      font-size: 1em;
-      background-color: #3498db;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .reset-button:hover {
-      background-color: #2980b9;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 0.75em;
-      text-align: center;
-    }
-    th {
-      background-color: #f0f0f0;
-    }
-  </style>
-</head>
-<body>
-  <h1>📚 考研倒计时学习助手</h1>
-  <div id="countdown"></div>
-  <div class="task-container">
-    <div class="task"><input type="checkbox" id="task1"> 数学一：完成张宇1000题A组5题</div>
-    <div class="task"><input type="checkbox" id="task2"> 英语一：精读真题阅读1篇，背诵30个单词</div>
-    <div class="task"><input type="checkbox" id="task3"> 专业课：做信号系统真题3题，回顾知识点</div>
-    <div class="task"><input type="checkbox" id="task4"> 政治：刷选择题10题，总结时政笔记</div>
-    <div class="task"><input type="checkbox" id="task5"> 锻炼：健身/拉伸30分钟</div>
-    <div class="task"><input type="checkbox" id="task6"> 晚上总结错题与记忆点</div>
-    <button class="reset-button" onclick="resetTasks()">🔄 重置今日任务</button>
-  </div>
+  <meta charset="UTF-8" />
+  <title>Study Helper</title>
+  <script type="module">
+    // 导入 Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js";
 
-  <div class="schedule-container">
-    <h2>📅 每日时间规划表</h2>
-    <table>
-      <tr><th>时间段</th><th>任务安排</th></tr>
-      <tr><td>7:30 - 8:30</td><td>洗漱早餐 + 英语单词</td></tr>
-      <tr><td>8:30 - 11:30</td><td>数学一主攻</td></tr>
-      <tr><td>11:30 - 12:30</td><td>午餐 + 休息</td></tr>
-      <tr><td>12:30 - 14:00</td><td>英语阅读/翻译/语法</td></tr>
-      <tr><td>14:00 - 16:30</td><td>专业课刷题 + 总结</td></tr>
-      <tr><td>16:30 - 17:30</td><td>锻炼 + 放松</td></tr>
-      <tr><td>17:30 - 19:00</td><td>晚餐 + 自由时间</td></tr>
-      <tr><td>19:00 - 21:00</td><td>政治背诵 or 真题选择</td></tr>
-      <tr><td>21:00 - 22:00</td><td>错题整理 + 明日规划</td></tr>
-    </table>
-  </div>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDRC82a8R8RDunzVIK8edRR8VW-iMGWn3Y",
+      authDomain: "helper-11473.firebaseapp.com",
+      projectId: "helper-11473",
+      storageBucket: "helper-11473.appspot.com",
+      messagingSenderId: "727304762781",
+      appId: "1:727304762781:web:4d3e7fc2824ce7edd1ab74",
+      measurementId: "G-ZMSV84FWN6"
+    };
 
-  <div class="footer">当前任务状态将自动保存（本地存储）。刷新页面也不会丢失。</div>
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
 
-  <script>
-    const endDate = new Date("2025-12-15T00:00:00").getTime();
-
-    function updateCountdown() {
-      const now = new Date().getTime();
-      const distance = endDate - now;
-      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-      document.getElementById("countdown").innerHTML = `距离考研还有 <strong>${days}</strong> 天`;
-    }
-
-    function saveState() {
-      for (let i = 1; i <= 6; i++) {
-        localStorage.setItem("task" + i, document.getElementById("task" + i).checked);
+    // 监听登录状态
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        document.getElementById("auth").style.display = "none";
+        document.getElementById("main").style.display = "block";
+        document.getElementById("useremail").textContent = user.email;
+      } else {
+        document.getElementById("auth").style.display = "block";
+        document.getElementById("main").style.display = "none";
       }
-    }
-
-    function loadState() {
-      for (let i = 1; i <= 6; i++) {
-        const val = localStorage.getItem("task" + i);
-        if (val !== null) {
-          document.getElementById("task" + i).checked = (val === "true");
-        }
-      }
-    }
-
-    function resetTasks() {
-      for (let i = 1; i <= 6; i++) {
-        document.getElementById("task" + i).checked = false;
-        localStorage.setItem("task" + i, false);
-      }
-    }
-
-    document.querySelectorAll("input[type='checkbox']").forEach(cb => {
-      cb.addEventListener("change", saveState);
     });
 
-    updateCountdown();
-    loadState();
-    setInterval(updateCountdown, 1000 * 60 * 60);
+    // 注册
+    window.register = () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      createUserWithEmailAndPassword(auth, email, password)
+        .catch(e => alert("注册失败：" + e.message));
+    };
+
+    // 登录
+    window.login = () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      signInWithEmailAndPassword(auth, email, password)
+        .catch(e => alert("登录失败：" + e.message));
+    };
+
+    // 登出
+    window.logout = () => {
+      signOut(auth);
+    };
   </script>
+</head>
+<body>
+  <div id="auth">
+    <h2>登录或注册</h2>
+    <input type="email" id="email" placeholder="邮箱"><br />
+    <input type="password" id="password" placeholder="密码"><br />
+    <button onclick="login()">登录</button>
+    <button onclick="register()">注册</button>
+  </div>
+
+  <div id="main" style="display:none">
+    <h2>欢迎你，<span id="useremail"></span></h2>
+    <button onclick="logout()">退出登录</button>
+    <p>（此处可加入你的学习计划、进度管理、每日记录等功能）</p>
+  </div>
 </body>
 </html>
