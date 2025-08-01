@@ -3,17 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <title>Study Helper</title>
-  <script type="module">
-    // 导入 Firebase
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js";
-    import {
-      getAuth,
-      createUserWithEmailAndPassword,
-      signInWithEmailAndPassword,
-      onAuthStateChanged,
-      signOut
-    } from "https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js";
 
+  <!-- Firebase SDK 引入 -->
+  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth.js"></script>
+
+  <script>
+    // Firebase 配置
     const firebaseConfig = {
       apiKey: "AIzaSyDRC82a8R8RDunzVIK8edRR8VW-iMGWn3Y",
       authDomain: "helper-11473.firebaseapp.com",
@@ -24,11 +20,12 @@
       measurementId: "G-ZMSV84FWN6"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+    // 初始化 Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
 
-    // 监听登录状态
-    onAuthStateChanged(auth, user => {
+    // 登录状态监听
+    auth.onAuthStateChanged(user => {
       if (user) {
         document.getElementById("auth").style.display = "none";
         document.getElementById("main").style.display = "block";
@@ -39,37 +36,43 @@
       }
     });
 
-    // 注册
+    // 注册函数
     window.register = () => {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
-      createUserWithEmailAndPassword(auth, email, password)
+      if (password.length < 6) {
+        alert("密码至少要6位！");
+        return;
+      }
+      auth.createUserWithEmailAndPassword(email, password)
         .catch(e => alert("注册失败：" + e.message));
     };
 
-    // 登录
+    // 登录函数
     window.login = () => {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
-      signInWithEmailAndPassword(auth, email, password)
+      auth.signInWithEmailAndPassword(email, password)
         .catch(e => alert("登录失败：" + e.message));
     };
 
-    // 登出
+    // 登出函数
     window.logout = () => {
-      signOut(auth);
+      auth.signOut();
     };
   </script>
 </head>
 <body>
+  <!-- 登录注册界面 -->
   <div id="auth">
     <h2>登录或注册</h2>
     <input type="email" id="email" placeholder="邮箱"><br />
-    <input type="password" id="password" placeholder="密码"><br />
+    <input type="password" id="password" placeholder="密码（至少6位）"><br />
     <button onclick="login()">登录</button>
     <button onclick="register()">注册</button>
   </div>
 
+  <!-- 登录成功后的界面 -->
   <div id="main" style="display:none">
     <h2>欢迎你，<span id="useremail"></span></h2>
     <button onclick="logout()">退出登录</button>
