@@ -44,7 +44,7 @@
       color: #888;
       font-size: 0.9em;
     }
-    .reset-button, .pomodoro-button {
+    .reset-button, .pomodoro-button, .add-task-button {
       display: block;
       margin: 1em auto;
       padding: 0.5em 1.5em;
@@ -55,7 +55,7 @@
       border-radius: 6px;
       cursor: pointer;
     }
-    .reset-button:hover, .pomodoro-button:hover {
+    .reset-button:hover, .pomodoro-button:hover, .add-task-button:hover {
       background-color: #2980b9;
     }
     table {
@@ -75,6 +75,16 @@
       font-size: 2em;
       margin-top: 1em;
     }
+    .task input[type="text"] {
+      flex: 1;
+      font-size: 1em;
+      padding: 0.4em;
+    }
+    .task .remove-task {
+      margin-left: 1em;
+      color: red;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -82,12 +92,9 @@
   <div id="countdown"></div>
 
   <div class="task-container">
-    <div class="task"><input type="checkbox" id="task1"> 数学一：完成张宇1000题A组5题</div>
-    <div class="task"><input type="checkbox" id="task2"> 英语一：精读真题阅读1篇，背诵30个单词</div>
-    <div class="task"><input type="checkbox" id="task3"> 专业课：做信号系统真题3题，回顾知识点</div>
-    <div class="task"><input type="checkbox" id="task4"> 政治：刷选择题10题，总结时政笔记</div>
-    <div class="task"><input type="checkbox" id="task5"> 锻炼：健身/拉伸30分钟</div>
-    <div class="task"><input type="checkbox" id="task6"> 晚上总结错题与记忆点</div>
+    <div id="task-list"></div>
+    <input type="text" id="new-task-text" placeholder="添加新任务...">
+    <button class="add-task-button" onclick="addTask()">➕ 添加任务</button>
     <button class="reset-button" onclick="resetTasks()">🔄 重置今日任务</button>
   </div>
 
@@ -125,35 +132,53 @@
       document.getElementById("countdown").innerHTML = `距离考研还有 <strong>${days}</strong> 天`;
     }
 
-    function saveState() {
-      for (let i = 1; i <= 6; i++) {
-        localStorage.setItem("task" + i, document.getElementById("task" + i).checked);
-      }
+    function saveTasks() {
+      const tasks = [];
+      document.querySelectorAll(".task-item").forEach((el, idx) => {
+        const checkbox = el.querySelector("input[type='checkbox']");
+        const text = el.querySelector("label").textContent;
+        tasks.push({ text, checked: checkbox.checked });
+      });
+      localStorage.setItem("tasks", JSON.stringify(tasks));
     }
 
-    function loadState() {
-      for (let i = 1; i <= 6; i++) {
-        const val = localStorage.getItem("task" + i);
-        if (val !== null) {
-          document.getElementById("task" + i).checked = (val === "true");
-        }
-      }
+    function loadTasks() {
+      const list = document.getElementById("task-list");
+      list.innerHTML = "";
+      const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+      tasks.forEach((task, idx) => {
+        const div = document.createElement("div");
+        div.className = "task task-item";
+        div.innerHTML = `<input type="checkbox" ${task.checked ? 'checked' : ''}> <label>${task.text}</label><span class="remove-task" onclick="removeTask(this)">🗑️</span>`;
+        div.querySelector("input").addEventListener("change", saveTasks);
+        list.appendChild(div);
+      });
+    }
+
+    function addTask() {
+      const text = document.getElementById("new-task-text").value.trim();
+      if (!text) return;
+      const div = document.createElement("div");
+      div.className = "task task-item";
+      div.innerHTML = `<input type="checkbox"> <label>${text}</label><span class="remove-task" onclick="removeTask(this)">🗑️</span>`;
+      div.querySelector("input").addEventListener("change", saveTasks);
+      document.getElementById("task-list").appendChild(div);
+      document.getElementById("new-task-text").value = "";
+      saveTasks();
+    }
+
+    function removeTask(el) {
+      el.parentElement.remove();
+      saveTasks();
     }
 
     function resetTasks() {
-      for (let i = 1; i <= 6; i++) {
-        document.getElementById("task" + i).checked = false;
-        localStorage.setItem("task" + i, false);
-      }
+      document.querySelectorAll(".task-item input[type='checkbox']").forEach(cb => cb.checked = false);
+      saveTasks();
     }
 
-    document.querySelectorAll("input[type='checkbox']").forEach(cb => {
-      cb.addEventListener("change", saveState);
-    });
-
     updateCountdown();
-    loadState();
-    setInterval(updateCountdown, 1000 * 60 * 60);
+    loadTasks();
 
     // Pomodoro Timer
     let pomodoroTime = 25 * 60;
