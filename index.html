@@ -18,15 +18,9 @@
     #countdown {
       font-size: 2em;
       text-align: center;
-      margin-bottom: 1em;
+      margin-bottom: 1.5em;
     }
-    #motivation {
-      text-align: center;
-      font-style: italic;
-      color: #777;
-      margin-bottom: 2em;
-    }
-    .task-container, .schedule-container {
+    .task-container, .schedule-container, .pomodoro-container {
       max-width: 700px;
       margin: 2em auto;
       background-color: #fff;
@@ -34,7 +28,7 @@
       padding: 2em;
       box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     }
-    .task {
+    .task, .time-block {
       display: flex;
       align-items: center;
       margin-bottom: 1em;
@@ -44,13 +38,13 @@
       margin-right: 0.75em;
       transform: scale(1.3);
     }
-    .progress {
+    .footer {
       text-align: center;
-      font-size: 1.1em;
-      margin-top: 1em;
-      color: #16a085;
+      margin-top: 2em;
+      color: #888;
+      font-size: 0.9em;
     }
-    .reset-button {
+    .reset-button, .pomodoro-button {
       display: block;
       margin: 1em auto;
       padding: 0.5em 1.5em;
@@ -61,7 +55,7 @@
       border-radius: 6px;
       cursor: pointer;
     }
-    .reset-button:hover {
+    .reset-button:hover, .pomodoro-button:hover {
       background-color: #2980b9;
     }
     table {
@@ -76,21 +70,17 @@
     th {
       background-color: #f0f0f0;
     }
-    .footer {
+    #pomodoro-timer {
       text-align: center;
-      margin-top: 2em;
-      color: #888;
-      font-size: 0.9em;
-    }
-    .highlight {
-      background-color: #e8f8f5;
+      font-size: 2em;
+      margin-top: 1em;
     }
   </style>
 </head>
 <body>
   <h1>📚 考研倒计时学习助手</h1>
   <div id="countdown"></div>
-  <div id="motivation"></div>
+
   <div class="task-container">
     <div class="task"><input type="checkbox" id="task1"> 数学一：完成张宇1000题A组5题</div>
     <div class="task"><input type="checkbox" id="task2"> 英语一：精读真题阅读1篇，背诵30个单词</div>
@@ -98,12 +88,12 @@
     <div class="task"><input type="checkbox" id="task4"> 政治：刷选择题10题，总结时政笔记</div>
     <div class="task"><input type="checkbox" id="task5"> 锻炼：健身/拉伸30分钟</div>
     <div class="task"><input type="checkbox" id="task6"> 晚上总结错题与记忆点</div>
-    <div class="progress" id="progress"></div>
     <button class="reset-button" onclick="resetTasks()">🔄 重置今日任务</button>
   </div>
+
   <div class="schedule-container">
     <h2>📅 每日时间规划表</h2>
-    <table id="scheduleTable">
+    <table>
       <tr><th>时间段</th><th>任务安排</th></tr>
       <tr><td>7:30 - 8:30</td><td>洗漱早餐 + 英语单词</td></tr>
       <tr><td>8:30 - 11:30</td><td>数学一主攻</td></tr>
@@ -116,71 +106,36 @@
       <tr><td>21:00 - 22:00</td><td>错题整理 + 明日规划</td></tr>
     </table>
   </div>
-  <div class="footer">当前任务状态将自动保存（本地存储），每天凌晨自动重置。</div>
+
+  <div class="pomodoro-container">
+    <h2>⏱ ADHD友好番茄钟</h2>
+    <div id="pomodoro-timer">25:00</div>
+    <button class="pomodoro-button" onclick="startPomodoro()">▶️ 开始专注 25 分钟</button>
+    <button class="pomodoro-button" onclick="resetPomodoro()">🔁 重置</button>
+  </div>
+
+  <div class="footer">当前任务状态将自动保存（本地存储）。刷新页面也不会丢失。</div>
+
   <script>
     const endDate = new Date("2025-12-15T00:00:00").getTime();
-    const quotes = [
-      "你流的每一滴汗，都会变成来年提分的泪。",
-      "坚持不一定成功，但放弃一定失败。",
-      "别怕慢，就怕停；别问结果，只顾耕耘。",
-      "考研路上，你不是一个人在战斗。"
-    ];
-
     function updateCountdown() {
-      const now = new Date();
-      const distance = endDate - now.getTime();
+      const now = new Date().getTime();
+      const distance = endDate - now;
       const days = Math.floor(distance / (1000 * 60 * 60 * 24));
       document.getElementById("countdown").innerHTML = `距离考研还有 <strong>${days}</strong> 天`;
-      document.title = `🎯 考研倒计时 ${days} 天`;
-    }
-
-    function updateProgress() {
-      let count = 0;
-      for (let i = 1; i <= 6; i++) {
-        if (document.getElementById("task" + i).checked) count++;
-      }
-      document.getElementById("progress").textContent = `完成进度：${count}/6 ✅`;
-    }
-
-    function highlightCurrentBlock() {
-      const now = new Date();
-      const hours = now.getHours();
-      const mins = now.getMinutes();
-      const current = hours * 60 + mins;
-      const schedule = document.querySelectorAll("#scheduleTable tr");
-      schedule.forEach((row, idx) => {
-        if (idx === 0) return;
-        const time = row.children[0].textContent;
-        const [start, end] = time.split(" - ").map(t => {
-          const [h, m] = t.split(":".replace(/\s/g, "")).map(Number);
-          return h * 60 + m;
-        });
-        row.classList.toggle("highlight", current >= start && current < end);
-      });
-    }
-
-    function showMotivation() {
-      const today = new Date().getDate();
-      document.getElementById("motivation").textContent = quotes[today % quotes.length];
     }
 
     function saveState() {
       for (let i = 1; i <= 6; i++) {
         localStorage.setItem("task" + i, document.getElementById("task" + i).checked);
       }
-      localStorage.setItem("lastSavedDate", new Date().toDateString());
     }
 
     function loadState() {
-      const savedDate = localStorage.getItem("lastSavedDate");
-      const today = new Date().toDateString();
       for (let i = 1; i <= 6; i++) {
-        if (savedDate === today) {
-          const val = localStorage.getItem("task" + i);
-          if (val !== null) document.getElementById("task" + i).checked = (val === "true");
-        } else {
-          document.getElementById("task" + i).checked = false;
-          localStorage.setItem("task" + i, false);
+        const val = localStorage.getItem("task" + i);
+        if (val !== null) {
+          document.getElementById("task" + i).checked = (val === "true");
         }
       }
     }
@@ -190,24 +145,42 @@
         document.getElementById("task" + i).checked = false;
         localStorage.setItem("task" + i, false);
       }
-      localStorage.setItem("lastSavedDate", new Date().toDateString());
-      updateProgress();
     }
 
     document.querySelectorAll("input[type='checkbox']").forEach(cb => {
-      cb.addEventListener("change", () => {
-        saveState();
-        updateProgress();
-      });
+      cb.addEventListener("change", saveState);
     });
 
     updateCountdown();
-    updateProgress();
-    highlightCurrentBlock();
-    showMotivation();
     loadState();
-    setInterval(updateCountdown, 60 * 1000);
-    setInterval(highlightCurrentBlock, 60 * 1000);
+    setInterval(updateCountdown, 1000 * 60 * 60);
+
+    // Pomodoro Timer
+    let pomodoroTime = 25 * 60;
+    let pomodoroInterval;
+    function updatePomodoro() {
+      const minutes = String(Math.floor(pomodoroTime / 60)).padStart(2, '0');
+      const seconds = String(pomodoroTime % 60).padStart(2, '0');
+      document.getElementById("pomodoro-timer").textContent = `${minutes}:${seconds}`;
+    }
+    function startPomodoro() {
+      clearInterval(pomodoroInterval);
+      pomodoroInterval = setInterval(() => {
+        if (pomodoroTime > 0) {
+          pomodoroTime--;
+          updatePomodoro();
+        } else {
+          clearInterval(pomodoroInterval);
+          alert("✅ 时间到！休息 5 分钟吧！");
+        }
+      }, 1000);
+    }
+    function resetPomodoro() {
+      clearInterval(pomodoroInterval);
+      pomodoroTime = 25 * 60;
+      updatePomodoro();
+    }
+    updatePomodoro();
   </script>
 </body>
 </html>
