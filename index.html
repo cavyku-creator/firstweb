@@ -123,6 +123,8 @@
 
   <div class="footer">当前任务状态将自动保存（本地存储）。刷新页面也不会丢失。</div>
 
+  <audio id="beep-sound" src="https://www.soundjay.com/button/beep-07.wav" preload="auto"></audio>
+
   <script>
     const endDate = new Date("2025-12-15T00:00:00").getTime();
     function updateCountdown() {
@@ -180,26 +182,46 @@
     updateCountdown();
     loadTasks();
 
-    // Pomodoro Timer
+    // Pomodoro Timer with Random 30s Break and Sound Alert
     let pomodoroTime = 25 * 60;
     let pomodoroInterval;
+    let breakScheduled = false;
+    let breakTime = null;
+    const beep = document.getElementById("beep-sound");
+
     function updatePomodoro() {
       const minutes = String(Math.floor(pomodoroTime / 60)).padStart(2, '0');
       const seconds = String(pomodoroTime % 60).padStart(2, '0');
       document.getElementById("pomodoro-timer").textContent = `${minutes}:${seconds}`;
     }
+
     function startPomodoro() {
       clearInterval(pomodoroInterval);
+      pomodoroTime = 25 * 60;
+      updatePomodoro();
+      breakScheduled = false;
+      breakTime = Math.floor(Math.random() * (10 * 60));
       pomodoroInterval = setInterval(() => {
         if (pomodoroTime > 0) {
           pomodoroTime--;
+          if (!breakScheduled && pomodoroTime === (25 * 60 - breakTime)) {
+            breakScheduled = true;
+            beep.play();
+            alert("🌱 快速活动一下！休息30秒...");
+            let pause = setTimeout(() => {
+              beep.play();
+              alert("✅ 继续专注学习吧！");
+            }, 30000);
+          }
           updatePomodoro();
         } else {
           clearInterval(pomodoroInterval);
+          beep.play();
           alert("✅ 时间到！休息 5 分钟吧！");
         }
       }, 1000);
     }
+
     function resetPomodoro() {
       clearInterval(pomodoroInterval);
       pomodoroTime = 25 * 60;
