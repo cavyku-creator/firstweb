@@ -44,7 +44,7 @@
       color: #888;
       font-size: 0.9em;
     }
-    .reset-button, .pomodoro-button, .add-task-button {
+    .reset-button, .pomodoro-button, .add-task-button, .edit-schedule-button {
       display: block;
       margin: 1em auto;
       padding: 0.5em 1.5em;
@@ -55,7 +55,7 @@
       border-radius: 6px;
       cursor: pointer;
     }
-    .reset-button:hover, .pomodoro-button:hover, .add-task-button:hover {
+    .reset-button:hover, .pomodoro-button:hover, .add-task-button:hover, .edit-schedule-button:hover {
       background-color: #2980b9;
     }
     table {
@@ -100,18 +100,20 @@
 
   <div class="schedule-container">
     <h2>📅 每日时间规划表</h2>
-    <table>
-      <tr><th>时间段</th><th>任务安排</th></tr>
-      <tr><td>7:30 - 8:30</td><td>洗漱早餐 + 英语单词</td></tr>
-      <tr><td>8:30 - 11:30</td><td>数学一主攻</td></tr>
-      <tr><td>11:30 - 12:30</td><td>午餐 + 休息</td></tr>
-      <tr><td>12:30 - 14:00</td><td>英语阅读/翻译/语法</td></tr>
-      <tr><td>14:00 - 16:30</td><td>专业课刷题 + 总结</td></tr>
-      <tr><td>16:30 - 17:30</td><td>锻炼 + 放松</td></tr>
-      <tr><td>17:30 - 19:00</td><td>晚餐 + 自由时间</td></tr>
-      <tr><td>19:00 - 21:00</td><td>政治背诵 or 真题选择</td></tr>
-      <tr><td>21:00 - 22:00</td><td>错题整理 + 明日规划</td></tr>
+    <button class="edit-schedule-button" onclick="toggleEditSchedule()">🖋️ 编辑时间表</button>
+    <table id="schedule-table">
+      <tr><th>时间段</th><th>任务安排</th><th>操作</th></tr>
+      <tr><td>7:30 - 8:30</td><td>洗漱早餐 + 英语单词</td><td><button onclick="deleteRow(this)">删除</button></td></tr>
+      <tr><td>8:30 - 11:30</td><td>数学一主攻</td><td><button onclick="deleteRow(this)">删除</button></td></tr>
+      <tr><td>11:30 - 12:30</td><td>午餐 + 休息</td><td><button onclick="deleteRow(this)">删除</button></td></tr>
+      <tr><td>12:30 - 14:00</td><td>英语阅读/翻译/语法</td><td><button onclick="deleteRow(this)">删除</button></td></tr>
+      <tr><td>14:00 - 16:30</td><td>专业课刷题 + 总结</td><td><button onclick="deleteRow(this)">删除</button></td></tr>
+      <tr><td>16:30 - 17:30</td><td>锻炼 + 放松</td><td><button onclick="deleteRow(this)">删除</button></td></tr>
+      <tr><td>17:30 - 19:00</td><td>晚餐 + 自由时间</td><td><button onclick="deleteRow(this)">删除</button></td></tr>
+      <tr><td>19:00 - 21:00</td><td>政治背诵 or 真题选择</td><td><button onclick="deleteRow(this)">删除</button></td></tr>
+      <tr><td>21:00 - 22:00</td><td>错题整理 + 明日规划</td><td><button onclick="deleteRow(this)">删除</button></td></tr>
     </table>
+    <button onclick="addScheduleRow()">➕ 添加时间段</button>
   </div>
 
   <div class="pomodoro-container">
@@ -182,52 +184,61 @@
     updateCountdown();
     loadTasks();
 
-    // Pomodoro Timer with Random 30s Break and Sound Alert
-    let pomodoroTime = 25 * 60;
-    let pomodoroInterval;
-    let breakScheduled = false;
-    let breakTime = null;
-    const beep = document.getElementById("beep-sound");
-
-    function updatePomodoro() {
-      const minutes = String(Math.floor(pomodoroTime / 60)).padStart(2, '0');
-      const seconds = String(pomodoroTime % 60).padStart(2, '0');
-      document.getElementById("pomodoro-timer").textContent = `${minutes}:${seconds}`;
+    // Schedule edit functions
+    function toggleEditSchedule() {
+      const table = document.getElementById("schedule-table");
+      const rows = table.querySelectorAll("tr");
+      rows.forEach((row, idx) => {
+        if (idx === 0) return;
+        const cells = row.children;
+        cells[1].innerHTML = `<input type='text' value='${cells[1].textContent}' />`;
+      });
+      document.querySelectorAll("#schedule-table input").forEach(input => {
+        input.addEventListener("blur", (e) => {
+          const cell = e.target.closest("td");
+          cell.innerHTML = e.target.value;
+          saveSchedule();
+        });
+      });
     }
 
-    function startPomodoro() {
-      clearInterval(pomodoroInterval);
-      pomodoroTime = 25 * 60;
-      updatePomodoro();
-      breakScheduled = false;
-      breakTime = Math.floor(Math.random() * (10 * 60));
-      pomodoroInterval = setInterval(() => {
-        if (pomodoroTime > 0) {
-          pomodoroTime--;
-          if (!breakScheduled && pomodoroTime === (25 * 60 - breakTime)) {
-            breakScheduled = true;
-            beep.play();
-            alert("🌱 快速活动一下！休息30秒...");
-            let pause = setTimeout(() => {
-              beep.play();
-              alert("✅ 继续专注学习吧！");
-            }, 30000);
-          }
-          updatePomodoro();
-        } else {
-          clearInterval(pomodoroInterval);
-          beep.play();
-          alert("✅ 时间到！休息 5 分钟吧！");
-        }
-      }, 1000);
+    function saveSchedule() {
+      const schedule = [];
+      document.querySelectorAll("#schedule-table tr").forEach((row, idx) => {
+        if (idx === 0) return;
+        const cells = row.children;
+        schedule.push({ time: cells[0].textContent, task: cells[1].textContent });
+      });
+      localStorage.setItem("schedule", JSON.stringify(schedule));
     }
 
-    function resetPomodoro() {
-      clearInterval(pomodoroInterval);
-      pomodoroTime = 25 * 60;
-      updatePomodoro();
+    function loadSchedule() {
+      const schedule = JSON.parse(localStorage.getItem("schedule")) || [];
+      const table = document.getElementById("schedule-table");
+      schedule.forEach(item => {
+        const row = table.insertRow();
+        row.insertCell(0).textContent = item.time;
+        row.insertCell(1).textContent = item.task;
+        const deleteCell = row.insertCell(2);
+        deleteCell.innerHTML = `<button onclick="deleteRow(this)">删除</button>`;
+      });
     }
-    updatePomodoro();
+
+    function deleteRow(button) {
+      button.closest("tr").remove();
+      saveSchedule();
+    }
+
+    function addScheduleRow() {
+      const table = document.getElementById("schedule-table");
+      const row = table.insertRow();
+      row.insertCell(0).textContent = "新的时间段";
+      row.insertCell(1).textContent = "新的任务";
+      const deleteCell = row.insertCell(2);
+      deleteCell.innerHTML = `<button onclick="deleteRow(this)">删除</button>`;
+    }
+
+    loadSchedule();
   </script>
 </body>
 </html>
