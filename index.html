@@ -145,4 +145,1128 @@
 
     /* NEW: Quick Actions */
     .quick-actions{display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:8px; margin-bottom:12px}
-    .quick-btn{padding:12px; background:var(--panel-hi); border:none; border-radius:12px; cursor:pointer; transition:all .2s ease; color:var(--text); te
+    .quick-btn{padding:12px; background:var(--panel-hi); border:none; border-radius:12px; cursor:pointer; transition:all .2s ease; color:var(--text); text-align:center}
+    .quick-btn:hover{transform:translateY(-2px); box-shadow:var(--shadow)}
+
+    /* NEW: Focus Mode */
+    .focus-mode{position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,.95); z-index:1000; display:none; align-items:center; justify-content:center; flex-direction:column}
+    .focus-screen{text-align:center; color:var(--text)}
+    .focus-time{font-size:72px; font-weight:800; margin-bottom:20px; font-variant-numeric: tabular-nums}
+    .focus-controls{display:flex; gap:20px}
+
+    /* Tabs */
+    .tabs{display:flex; gap:2px; margin-bottom:12px; background:var(--panel-hi); border-radius:12px; padding:4px}
+    .tab{padding:8px 16px; border-radius:8px; cursor:pointer; transition:all .2s ease; background:transparent; border:none; color:var(--muted)}
+    .tab.active{background:var(--brand); color:white}
+    .tab-content{display:none}
+    .tab-content.active{display:block}
+
+    /* Motivational */
+    .motivation{text-align:center; padding:20px; background:linear-gradient(135deg, var(--brand), var(--ok)); border-radius:12px; margin-bottom:14px; color:white}
+    .motivation-text{font-size:18px; font-weight:600; margin-bottom:8px}
+    .motivation-sub{opacity:.9; font-size:14px}
+
+    /* Floating Action Button */
+    .fab{position:fixed; bottom:20px; right:20px; width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg, var(--brand), var(--ok)); border:none; color:white; font-size:24px; cursor:pointer; box-shadow:var(--shadow); z-index:100; display:grid; place-items:center; transition:transform .2s ease}
+    .fab:hover{transform:scale(1.1)}
+
+    @media print{
+      header, .no-print, .fab{display:none !important}
+      body{background:#fff}
+      .panel{box-shadow:none}
+    }
+  </style>
+</head>
+<body>
+  <!-- Focus Mode Overlay -->
+  <div id="focusOverlay" class="focus-mode">
+    <div class="focus-screen">
+      <div class="focus-time" id="focusTime">25:00</div>
+      <div class="muted" id="focusStatusText">专注模式</div>
+      <div class="focus-controls">
+        <button class="btn" id="exitFocus">退出专注</button>
+        <button class="btn ghost" id="pauseFocus">暂停</button>
+      </div>
+    </div>
+  </div>
+
+  <header>
+    <div class="topbar">
+      <div class="title">
+        <div class="logo"></div>
+        <div>
+          <div>考研学习工作台 · 增强版</div>
+          <div class="muted" style="font-size:12px">功能全面 · 智能分析 · 高效学习</div>
+        </div>
+      </div>
+      <div class="grow"></div>
+      <span id="now" class="badge">--:--</span>
+      <button id="themeBtn" class="btn icon" title="切换主题">🌓</button>
+      <button id="focusBtn" class="btn primary" title="进入专注模式">🎯 专注</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Motivational Banner -->
+    <div class="motivation">
+      <div class="motivation-text" id="motivationText">每一分努力都在为梦想铺路</div>
+      <div class="motivation-sub" id="motivationSub">距离考研还有 -- 天，今天也要全力以赴！</div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="panel no-print">
+      <div class="hd"><strong>快捷操作</strong>
+        <div class="row">
+          <button class="btn ghost" id="backupBtn">备份</button>
+          <button class="btn ghost" id="restoreBtn">还原</button>
+          <button class="btn danger" id="resetAllBtn">清空本地</button>
+          <input type="file" id="restoreFile" accept="application/json" hidden />
+        </div>
+      </div>
+      <div class="bd">
+        <div class="quick-actions">
+          <button class="quick-btn" id="quickMath">📐 数学一刷题</button>
+          <button class="quick-btn" id="quickEng">📚 英语一阅读</button>
+          <button class="quick-btn" id="quickPol">🎓 政治背诵</button>
+          <button class="quick-btn" id="quickSig">⚡ 信号与系统</button>
+          <button class="quick-btn" id="quickDig">🔧 数字电路</button>
+          <button class="quick-btn" id="quickVocab">📝 背单词</button>
+          <button class="quick-btn" id="quickReview">🔄 错题复习</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- 左侧：倒计时 + 番茄钟 + 今日指标 -->
+      <div class="panel">
+        <div class="hd"><strong>倒计时与番茄钟</strong>
+          <div class="row">
+            <label class="badge" for="examDate">初试日期</label>
+            <input type="date" id="examDate"/>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="countdown">
+            <div class="box">
+              <div class="muted">距离初试</div>
+              <div class="big" id="dLeft">--</div>
+              <div class="muted">天</div>
+            </div>
+            <div class="box">
+              <div class="muted">今日目标</div>
+              <div class="row" style="align-items:center; margin-top:6px">
+                <input type="number" id="goalMin" min="10" step="5" value="180"/>
+                <span class="muted">分钟</span>
+                <span class="badge" id="goalHit">未达成</span>
+              </div>
+              <div class="muted" id="todayProgress" style="margin-top:6px">今日专注 0 分钟</div>
+            </div>
+          </div>
+
+          <div class="pomodoro">
+            <div class="modes">
+              <button class="btn pill" data-mode="work">专注</button>
+              <button class="btn pill" data-mode="short">短休</button>
+              <button class="btn pill" data-mode="long">长休</button>
+              <span class="badge" id="cycleInfo">第 1 轮</span>
+            </div>
+            <div class="screen">
+              <div class="time" id="time">25:00</div>
+              <div class="muted" id="modeLabel">专注模式</div>
+            </div>
+            <div class="row">
+              <button class="btn primary" id="startPause">开始</button>
+              <button class="btn" id="skip">跳过</button>
+              <button class="btn ghost" id="reset">重置</button>
+            </div>
+          </div>
+
+          <div class="kpi">
+            <div class="card"><div class="muted">本周累计</div><div class="num" id="wkMin">0</div><div class="muted">分钟</div></div>
+            <div class="card"><div class="muted">连续打卡</div><div class="num" id="streak">0</div><div class="muted">天</div></div>
+            <div class="card"><div class="muted">总任务数</div><div class="num" id="totalTasks">0</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右侧主工作区 -->
+      <div class="panel">
+        <div class="hd">
+          <div class="tabs">
+            <button class="tab active" data-tab="todo">📋 待办</button>
+            <button class="tab" data-tab="goals">🎯 目标</button>
+            <button class="tab" data-tab="exam">📊 模考</button>
+            <button class="tab" data-tab="errors">❌ 错题</button>
+          </div>
+        </div>
+        <div class="bd">
+          <!-- 待办标签页 -->
+          <div class="tab-content active" id="todoContent">
+            <div class="todo-header">
+              <span class="pill" data-filter="全部">全部</span>
+              <span class="pill" data-filter="数学一">数学一</span>
+              <span class="pill" data-filter="英语一">英语一</span>
+              <span class="pill" data-filter="政治">政治</span>
+              <span class="pill" data-filter="信号与系统">信号与系统</span>
+              <span class="pill" data-filter="数字电路">数字电路</span>
+              <span class="pill" data-filter="其他">其他</span>
+            </div>
+
+            <div class="todo-inputs" style="margin-top:10px">
+              <input id="taskTitle" placeholder="任务内容"/>
+              <select id="taskSubject">
+                <option value="数学一">数学一</option>
+                <option value="英语一">英语一</option>
+                <option value="政治">政治</option>
+                <option value="信号与系统">信号与系统</option>
+                <option value="数字电路">数字电路</option>
+                <option value="其他">其他</option>
+              </select>
+              <input id="taskDue" type="date">
+              <select id="taskPri">
+                <option value="P1">紧急</option>
+                <option value="P2" selected>常规</option>
+                <option value="P3">低</option>
+              </select>
+              <button id="addTask" class="btn primary">添加</button>
+            </div>
+            <div id="taskList" style="margin-top:12px"></div>
+          </div>
+
+          <!-- 学习目标标签页 -->
+          <div class="tab-content" id="goalsContent">
+            <div class="goals-grid">
+              <div class="goal-item">
+                <div><strong>数学一</strong> - 每日13题</div>
+                <div class="muted">近 7 天进度</div>
+                <div class="goal-progress"><div class="bar" id="mathProgress" style="width: 0%"></div></div>
+                <div class="muted" id="mathProgressText" style="margin-top:4px">0 / 91 题</div>
+              </div>
+              <div class="goal-item">
+                <div><strong>英语一</strong> - 每日1篇阅读</div>
+                <div class="muted">近 7 天进度</div>
+                <div class="goal-progress"><div class="bar" id="engProgress" style="width: 0%"></div></div>
+                <div class="muted" id="engProgressText" style="margin-top:4px">0 / 7 篇</div>
+              </div>
+            </div>
+            <button class="btn" id="addGoal">+ 添加学习目标（自定义）</button>
+            <div id="customGoals" style="margin-top:10px"></div>
+          </div>
+
+          <!-- 模考管理标签页 -->
+          <div class="tab-content" id="examContent">
+            <div class="row" style="margin-bottom:12px">
+              <input id="examName" placeholder="考试名称，如：数学模拟卷1"/>
+              <input id="examScore" type="number" placeholder="得分" min="0" max="150"/>
+              <input id="examTotal" type="number" placeholder="总分" min="0" max="150" value="150"/>
+              <button id="addExam" class="btn primary">记录</button>
+            </div>
+            <div id="examList"></div>
+          </div>
+
+          <!-- 错题本标签页 -->
+          <div class="tab-content" id="errorsContent">
+            <div class="row" style="margin-bottom:12px">
+              <select id="errorSubject">
+                <option value="数学一">数学一</option>
+                <option value="英语一">英语一</option>
+                <option value="政治">政治</option>
+                <option value="信号与系统">信号与系统</option>
+                <option value="数字电路">数字电路</option>
+              </select>
+              <input id="errorTitle" placeholder="错题描述"/>
+              <button id="addError" class="btn primary">添加</button>
+            </div>
+            <textarea id="errorContent" placeholder="题目内容、解答过程、错误原因..." rows="4"></textarea>
+            <div id="errorList" style="margin-top:12px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:14px"></div>
+
+    <div class="grid">
+      <!-- 日历 -->
+      <div class="panel">
+        <div class="hd">
+          <strong>学习日历</strong>
+          <div class="row">
+            <button class="btn icon" id="prevMonth">◀</button>
+            <span class="badge" id="ymLabel">--</span>
+            <button class="btn icon" id="nextMonth">▶</button>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="row" style="margin-bottom:6px; justify-content:space-between">
+            <div class="row" style="gap:10px">
+              <span class="dow">一</span><span class="dow">二</span><span class="dow">三</span>
+              <span class="dow">四</span><span class="dow">五</span><span class="dow">六</span><span class="dow">日</span>
+            </div>
+          </div>
+          <div id="calendar" class="calendar"></div>
+        </div>
+      </div>
+
+      <!-- 词汇 & 统计 & 笔记 -->
+      <div class="panel">
+        <div class="hd">
+          <div class="tabs">
+            <button class="tab active" data-tab="vocab">📖 词汇</button>
+            <button class="tab" data-tab="stats">📈 统计</button>
+            <button class="tab" data-tab="notes">📝 笔记</button>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="tab-content active" id="vocabContent">
+            <div class="row" style="margin-bottom:10px">
+              <input id="vWord" placeholder="单词"/>
+              <input id="vMean" placeholder="释义"/>
+              <button id="addVocab" class="btn primary">添加</button>
+            </div>
+            <div class="row" style="margin-bottom:10px">
+              <button class="btn" id="startQuiz">开始测验</button>
+              <button class="btn ghost" id="shuffle">打乱</button>
+            </div>
+            <div id="vCards"></div>
+            <div id="quizBox" class="card" hidden>
+              <div class="word" id="qFront">—</div>
+              <div class="mean" id="qBack" hidden>—</div>
+              <div class="row" style="justify-content:center; margin-top:8px">
+                <button class="btn" id="reveal">显示</button>
+                <button class="btn success" id="know">认识</button>
+                <button class="btn danger" id="dont">不认识</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-content" id="statsContent">
+            <div class="stats-grid">
+              <canvas id="chartMin"></canvas>
+              <canvas id="chartTask"></canvas>
+            </div>
+          </div>
+
+          <div class="tab-content" id="notesContent">
+            <div class="toolbar">
+              <button class="btn icon" data-cmd="bold">B</button>
+              <button class="btn icon" data-cmd="italic">I</button>
+              <button class="btn" id="clearNotes">清空</button>
+            </div>
+            <div id="editor" class="editor" contenteditable="true"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:14px"></div>
+
+    <!-- 阶段周计划 & 时间规划表 -->
+    <div class="panel">
+      <div class="hd">
+        <strong>阶段周计划 & 时间规划表</strong>
+        <div class="row">
+          <button class="btn ghost" id="restoreDefaultPlan">恢复默认模板</button>
+          <button class="btn" id="savePlanBtn">保存</button>
+        </div>
+      </div>
+      <div class="bd">
+        <div class="tabs">
+          <button class="tab active" data-tab="wkplan">🗂 阶段周计划</button>
+          <button class="tab" data-tab="timetable">⏰ 时间规划表</button>
+        </div>
+
+        <div class="tab-content active" id="wkplanContent">
+          <div class="row" style="margin-bottom:10px">
+            <select id="stageSel">
+              <option value="基础期">基础期</option>
+              <option value="强化期">强化期</option>
+              <option value="冲刺期">冲刺期</option>
+            </select>
+            <button class="btn" id="addWeekItem">+ 添加条目</button>
+          </div>
+          <ul id="wkList" class="wk-list"></ul>
+        </div>
+
+        <div class="tab-content" id="timetableContent">
+          <div class="row" style="margin-bottom:10px">
+            <button class="btn" id="addSlot">+ 添加时间段</button>
+          </div>
+          <div id="ttBox"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Floating Action Button -->
+  <button class="fab no-print" id="fab" title="快速添加任务">+</button>
+
+  <script>
+    // ===== 命名空间（与旧版隔离） =====
+    const NS = 'ke_v2_';
+
+    // ===== 基础工具函数 =====
+    const $ = sel => document.querySelector(sel);
+    const $$ = sel => Array.from(document.querySelectorAll(sel));
+    const fmt2 = n => String(n).padStart(2,'0');
+    const todayKey = (d=new Date()) => \`\${d.getFullYear()}-\${fmt2(d.getMonth()+1)}-\${fmt2(d.getDate())}\`;
+
+    // 简易存储
+    const store = {
+      get(k, def) {
+        try {
+          const v = localStorage.getItem(NS + k);
+          return v ? JSON.parse(v) : (def ?? null);
+        } catch {
+          return def ?? null;
+        }
+      },
+      set(k, v) { localStorage.setItem(NS + k, JSON.stringify(v)); },
+      del(k) { localStorage.removeItem(NS + k); },
+      all() {
+        const data = {};
+        Object.keys(localStorage).forEach(k=>{
+          if (k.startsWith(NS)) data[k] = JSON.parse(localStorage.getItem(k));
+        });
+        return data;
+      },
+      clearAll() {
+        Object.keys(localStorage).forEach(k=>{
+          if (k.startsWith(NS)) localStorage.removeItem(k);
+        });
+      }
+    };
+
+    // ===== 主题系统 =====
+    const themeBtn = $('#themeBtn');
+    function applyTheme() {
+      document.documentElement.setAttribute('data-theme', store.get('theme', 'dark'));
+    }
+    themeBtn.onclick = () => {
+      const theme = store.get('theme', 'dark') === 'dark' ? 'light' : 'dark';
+      store.set('theme', theme);
+      applyTheme();
+      drawCharts();
+    };
+    applyTheme();
+
+    // ===== 时钟 =====
+    function updateClock() {
+      const now = new Date();
+      $('#now').textContent = \`\${fmt2(now.getHours())}:\${fmt2(now.getMinutes())}\`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // ===== 倒计时 =====
+    const examDate = $('#examDate');
+    examDate.value = store.get('examDate', '2025-12-20');
+    function updateCountdown() {
+      const target = new Date(examDate.value + 'T00:00:00');
+      const now = new Date();
+      const days = Math.ceil((target - now) / (1000 * 60 * 60 * 24));
+      $('#dLeft').textContent = days >= 0 ? days : 0;
+      $('#motivationSub').textContent = \`距离考研还有 \${days >= 0 ? days : 0} 天，今天也要全力以赴！\`;
+    }
+    examDate.onchange = () => { store.set('examDate', examDate.value); updateCountdown(); };
+    updateCountdown();
+
+    // ===== 番茄钟系统 =====
+    const pomodoro = {
+      mode: 'work',
+      timeLeft: 25 * 60,
+      isRunning: false,
+      timer: null,
+      cycle: 1,
+      settings: { work: 25, short: 5, long: 15 }
+    };
+
+    function updatePomodoroDisplay() {
+      const mins = Math.floor(pomodoro.timeLeft / 60);
+      const secs = pomodoro.timeLeft % 60;
+      const timeStr = \`\${fmt2(mins)}:\${fmt2(secs)}\`;
+      $('#time').textContent = timeStr;
+      $('#focusTime').textContent = timeStr;
+
+      const modeText = { work: '专注模式', short: '短休息', long: '长休息' }[pomodoro.mode];
+      $('#modeLabel').textContent = modeText;
+      $('#focusStatusText').textContent = modeText;
+
+      $('#cycleInfo').textContent = \`第 \${pomodoro.cycle} 轮\`;
+
+      $$('.modes .btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === pomodoro.mode);
+      });
+    }
+
+    function startPomodoro() {
+      if (pomodoro.isRunning) return;
+      pomodoro.isRunning = true;
+      $('#startPause').textContent = '暂停';
+      pomodoro.timer = setInterval(() => {
+        pomodoro.timeLeft--;
+        updatePomodoroDisplay();
+        if (pomodoro.timeLeft <= 0) { completeSession(); nextMode(); }
+      }, 1000);
+    }
+
+    function pausePomodoro() {
+      pomodoro.isRunning = false;
+      clearInterval(pomodoro.timer);
+      $('#startPause').textContent = '开始';
+    }
+
+    function resetPomodoro() {
+      pausePomodoro();
+      pomodoro.timeLeft = pomodoro.settings[pomodoro.mode] * 60;
+      updatePomodoroDisplay();
+    }
+
+    function setMode(mode) {
+      pomodoro.mode = mode;
+      pomodoro.timeLeft = pomodoro.settings[mode] * 60;
+      updatePomodoroDisplay();
+    }
+
+    function nextMode() {
+      if (pomodoro.mode === 'work') {
+        if (pomodoro.cycle % 4 === 0) setMode('long'); else setMode('short');
+      } else {
+        pomodoro.cycle++;
+        setMode('work');
+      }
+      resetPomodoro();
+    }
+
+    function completeSession() {
+      if (pomodoro.mode === 'work') {
+        logStudyTime(pomodoro.settings.work);
+        showNotification('专注时间完成！', '休息一下吧 😊');
+      }
+    }
+
+    $('#startPause').onclick = () => pomodoro.isRunning ? pausePomodoro() : startPomodoro();
+    $('#skip').onclick = () => { nextMode(); };
+    $('#reset').onclick = resetPomodoro;
+    $$('.modes .btn').forEach(btn => btn.onclick = () => setMode(btn.dataset.mode));
+    updatePomodoroDisplay();
+
+    // ===== 专注模式 =====
+    $('#focusBtn').onclick = () => { $('#focusOverlay').style.display = 'flex'; startPomodoro(); };
+    $('#exitFocus').onclick = () => { $('#focusOverlay').style.display = 'none'; };
+    $('#pauseFocus').onclick = () => {
+      pomodoro.isRunning ? pausePomodoro() : startPomodoro();
+      $('#pauseFocus').textContent = pomodoro.isRunning ? '暂停' : '继续';
+    };
+
+    // ===== 数据记录与统计 =====
+    function logStudyTime(minutes) {
+      const key = todayKey();
+      const log = store.get('log_' + key, { minutes: 0, tasks: 0, pomodoros: 0 });
+      log.minutes += minutes;
+      log.pomodoros += 1;
+      store.set('log_' + key, log);
+      updateStats();
+    }
+
+    function logTask() {
+      const key = todayKey();
+      const log = store.get('log_' + key, { minutes: 0, tasks: 0, pomodoros: 0 });
+      log.tasks += 1;
+      store.set('log_' + key, log);
+      updateStats();
+    }
+
+    function getWeekData() {
+      const data = [];
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const log = store.get('log_' + todayKey(date), { minutes: 0, tasks: 0 });
+        data.push({ date: todayKey(date), ...log });
+      }
+      return data;
+    }
+
+    function updateStats() {
+      const today = store.get('log_' + todayKey(), { minutes: 0, tasks: 0, pomodoros: 0 });
+      const goal = parseInt($('#goalMin').value) || 180;
+
+      $('#todayProgress').textContent = \`今日专注 \${today.minutes} 分钟 · \${today.pomodoros} 个番茄 · \${today.tasks} 个任务\`;
+
+      const goalHit = today.minutes >= goal;
+      $('#goalHit').textContent = goalHit ? '已达成' : '未达成';
+      $('#goalHit').style.background = goalHit ? 'var(--ok)' : 'var(--panel-hi)';
+
+      // 本周累计
+      const weekData = getWeekData();
+      $('#wkMin').textContent = weekData.reduce((sum, day) => sum + day.minutes, 0);
+
+      // 连续打卡（按目标分钟）
+      let streak = 0;
+      for (let i = 0; i < 365; i++) {
+        const date = new Date(); date.setDate(date.getDate() - i);
+        const dayLog = store.get('log_' + todayKey(date), { minutes: 0 });
+        if (dayLog.minutes >= goal) streak++; else break;
+      }
+      $('#streak').textContent = streak;
+
+      // 总任务数（已完成）
+      const tasks = store.get('tasks', []);
+      $('#totalTasks').textContent = tasks.filter(t => t.done).length;
+
+      updateCalendar();
+      drawCharts();
+      updateGoalProgress();
+    }
+
+    $('#goalMin').onchange = () => { store.set('goalMin', parseInt($('#goalMin').value)); updateStats(); };
+    $('#goalMin').value = store.get('goalMin', 180);
+
+    // ===== 任务管理 =====
+    let tasks = store.get('tasks', []);
+
+    // 学科筛选
+    let curFilter = store.get('filter', '全部');
+    function applyFilterPills() {
+      $$('.todo-header .pill').forEach(el=>{
+        el.classList.toggle('active', el.dataset.filter === curFilter);
+        el.onclick = ()=>{ curFilter = el.dataset.filter; store.set('filter', curFilter); renderTasks(); };
+      });
+    }
+
+    function addTask(title, subject = '其他', due = null, priority = 'P2') {
+      const task = {
+        id: Date.now() + Math.random(),
+        title, subject, due, priority,
+        done: false,
+        createdAt: Date.now(),
+        doneAt: null
+      };
+      tasks.push(task);
+      store.set('tasks', tasks);
+      renderTasks();
+    }
+
+    function toggleTask(id) {
+      const task = tasks.find(t => t.id === id);
+      if (task) {
+        task.done = !task.done;
+        task.doneAt = task.done ? Date.now() : null;
+        if (task.done) logTask();
+        store.set('tasks', tasks);
+        renderTasks();
+      }
+    }
+
+    function deleteTask(id) {
+      tasks = tasks.filter(t => t.id !== id);
+      store.set('tasks', tasks);
+      renderTasks();
+    }
+
+    function renderTasks() {
+      const list = $('#taskList');
+      list.innerHTML = '';
+
+      const filtered = tasks.filter(t => curFilter === '全部' ? true : t.subject === curFilter);
+
+      const sortedTasks = filtered
+        .sort((a, b) => {
+          if (a.done !== b.done) return a.done ? 1 : -1;
+          if (a.priority !== b.priority) return a.priority.localeCompare(b.priority);
+          return (a.due || '9999-12-31').localeCompare(b.due || '9999-12-31');
+        });
+
+      sortedTasks.forEach(task => {
+        const div = document.createElement('div');
+        div.className = 'task' + (task.done ? ' done' : '');
+        div.innerHTML = `
+          <input type="checkbox" ${task.done ? 'checked' : ''} onchange="toggleTask(${task.id})" aria-label="完成任务">
+          <div>
+            <div class="title">${escapeHTML(task.title)} <span class="tag">${task.subject}</span></div>
+            <div class="meta">优先级: ${task.priority} ${task.due ? '· 截止: ' + task.due : ''}</div>
+          </div>
+          <button class="btn icon" title="删除" onclick="deleteTask(${task.id})">🗑</button>
+        `;
+        list.appendChild(div);
+      });
+
+      updateStats();
+    }
+
+    // 输入快捷键回车添加
+    $('#taskTitle').onkeydown = (e) => { if (e.key === 'Enter') $('#addTask').click(); };
+    $('#addTask').onclick = () => {
+      const title = $('#taskTitle').value.trim();
+      if (!title) return;
+      addTask(title, $('#taskSubject').value, $('#taskDue').value || null, $('#taskPri').value);
+      $('#taskTitle').value = '';
+    };
+
+    // ===== 标签页系统 =====
+    function initTabs() {
+      $$('.tab').forEach(tab => {
+        tab.onclick = () => {
+          const targetTab = tab.dataset.tab;
+          const container = tab.closest('.panel');
+          container.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+          container.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+          tab.classList.add('active');
+          container.querySelector('#' + targetTab + 'Content').classList.add('active');
+          if (targetTab === 'stats') drawCharts();
+        };
+      });
+    }
+
+    // ===== 学习目标管理（近 7 天） =====
+    let customGoals = store.get('customGoals', []);
+    function updateGoalProgress() {
+      const weekAgo = Date.now() - 7*24*3600*1000;
+      const doneMath = tasks.filter(t => t.subject === '数学一' && t.done && t.doneAt && t.doneAt >= weekAgo).length;
+      const doneEng = tasks.filter(t => t.subject === '英语一' && t.done && t.doneAt && t.doneAt >= weekAgo).length;
+
+      const mathTarget = 13*7;
+      const engTarget = 1*7;
+
+      const mathPct = Math.min(100, Math.round(doneMath / mathTarget * 100));
+      const engPct  = Math.min(100, Math.round(doneEng / engTarget * 100));
+
+      $('#mathProgress').style.width = mathPct + '%';
+      $('#engProgress').style.width = engPct + '%';
+      $('#mathProgressText').textContent = \`\${doneMath} / \${mathTarget} 题\`;
+      $('#engProgressText').textContent  = \`\${doneEng} / \${engTarget} 篇\`;
+
+      // 自定义目标
+      const box = $('#customGoals');
+      box.innerHTML = '';
+      customGoals.forEach((g, idx) => {
+        const done = tasks.filter(t => t.subject === g.subject && t.done && t.doneAt && t.doneAt >= weekAgo).length;
+        const pct = Math.min(100, Math.round(done / g.weekTarget * 100));
+        const item = document.createElement('div');
+        item.className = 'goal-item';
+        item.innerHTML = `
+          <div><strong>${g.subject}</strong> - ${escapeHTML(g.name)}（周目标 ${g.weekTarget}）</div>
+          <div class="goal-progress"><div class="bar" style="width:${pct}%"></div></div>
+          <div class="muted" style="margin-top:4px">${done} / ${g.weekTarget}</div>
+          <div class="row" style="margin-top:6px">
+            <button class="btn ghost" onclick="deleteGoal(${idx})">删除</button>
+          </div>
+        `;
+        box.appendChild(item);
+      });
+    }
+
+    $('#addGoal').onclick = () => {
+      const name = prompt('目标名称（如：英语一听力 3 次）');
+      if (!name) return;
+      const subject = prompt('学科（数学一/英语一/政治/信号与系统/数字电路/其他）', '英语一') || '英语一';
+      const weekTarget = parseInt(prompt('周目标数量（整数）', '3'), 10);
+      if (!weekTarget || weekTarget <= 0) return;
+      customGoals.push({ name, subject, weekTarget });
+      store.set('customGoals', customGoals);
+      updateGoalProgress();
+    };
+    window.deleteGoal = (idx)=>{ customGoals.splice(idx,1); store.set('customGoals', customGoals); updateGoalProgress(); };
+
+    // ===== 模考管理 =====
+    let exams = store.get('exams', []);
+    $('#addExam').onclick = () => {
+      const name = $('#examName').value.trim();
+      const score = parseInt($('#examScore').value);
+      const total = parseInt($('#examTotal').value) || 150;
+      if (!name || isNaN(score)) return;
+      exams.push({ id: Date.now(), name, score, total, date: todayKey(), percentage: Math.round((score / total) * 100) });
+      store.set('exams', exams);
+      renderExams();
+      $('#examName').value = ''; $('#examScore').value = '';
+    };
+
+    function renderExams() {
+      const list = $('#examList'); list.innerHTML = '';
+      const recent = exams.slice(-10).reverse();
+      recent.forEach(exam => {
+        const div = document.createElement('div');
+        div.className = 'exam-item';
+        div.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div><strong>${escapeHTML(exam.name)}</strong><div class="muted">${exam.date}</div></div>
+            <div class="exam-score">${exam.score}/${exam.total} (${exam.percentage}%)</div>
+          </div>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    // ===== 错题本 =====
+    let errors = store.get('errors', []);
+    $('#addError').onclick = () => {
+      const subject = $('#errorSubject').value;
+      const title = $('#errorTitle').value.trim();
+      const content = $('#errorContent').value.trim();
+      if (!title || !content) return;
+      errors.push({ id: Date.now(), subject, title, content, date: todayKey(), reviewed: false });
+      store.set('errors', errors);
+      renderErrors();
+      $('#errorTitle').value = ''; $('#errorContent').value = '';
+    };
+
+    function renderErrors() {
+      const list = $('#errorList'); list.innerHTML = '';
+      errors.slice(-50).reverse().forEach(error => {
+        const div = document.createElement('div');
+        div.className = 'error-item';
+        div.innerHTML = `
+          <div style="display:flex; gap:10px; justify-content: space-between; align-items:flex-start;">
+            <div style="flex:1;">
+              <strong>${error.subject} - ${escapeHTML(error.title)}</strong>
+              <div class="muted">${error.date}</div>
+              <div class="error-content">${escapeHTML(error.content).replace(/\\n/g,'<br>')}</div>
+            </div>
+            <div class="row">
+              <button class="btn ${error.reviewed ? 'success' : 'ghost'}" onclick="toggleErrorReview(${error.id})">${error.reviewed ? '已复习' : '待复习'}</button>
+              <button class="btn ghost" onclick="deleteError(${error.id})">删除</button>
+            </div>
+          </div>
+        `;
+        list.appendChild(div);
+      });
+    }
+    function toggleErrorReview(id) {
+      const error = errors.find(e => e.id === id);
+      if (error) { error.reviewed = !error.reviewed; store.set('errors', errors); renderErrors(); }
+    }
+    function deleteError(id) {
+      errors = errors.filter(e=>e.id!==id); store.set('errors', errors); renderErrors();
+    }
+    window.toggleErrorReview = toggleErrorReview;
+    window.deleteError = deleteError;
+
+    // ===== 日历系统 =====
+    let currentDate = new Date();
+    function updateCalendar() {
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      $('#ymLabel').textContent = \`\${year}年\${month + 1}月\`;
+      const calendar = $('#calendar'); calendar.innerHTML = '';
+
+      const firstDay = new Date(year, month, 1);
+      const startDate = new Date(firstDay);
+      startDate.setDate(startDate.getDate() - (firstDay.getDay() + 6) % 7);
+
+      const goal = parseInt($('#goalMin').value) || 180;
+
+      for (let i = 0; i < 42; i++) {
+        const date = new Date(startDate); date.setDate(startDate.getDate() + i);
+        const dayEl = document.createElement('div'); dayEl.className = 'day';
+        if (date.getMonth() !== month) dayEl.style.opacity = '0.3';
+        const dateStr = todayKey(date);
+        const dayLog = store.get('log_' + dateStr, { minutes: 0 });
+
+        if (dayLog.minutes >= goal) dayEl.classList.add('good');
+        else if (dayLog.minutes > 0) dayEl.classList.add('bad');
+
+        dayEl.innerHTML = `<div class="d">\${date.getDate()}</div><div class="dot"></div>`;
+        dayEl.title = \`\${dateStr}: \${dayLog.minutes || 0}分钟\`;
+        calendar.appendChild(dayEl);
+      }
+    }
+    $('#prevMonth').onclick = () => { currentDate.setMonth(currentDate.getMonth() - 1); updateCalendar(); };
+    $('#nextMonth').onclick = () => { currentDate.setMonth(currentDate.getMonth() + 1); updateCalendar(); };
+
+    // ===== 词汇系统 =====
+    let vocab = store.get('vocab', []);
+    let quizIdx = -1;
+    function renderVocab() {
+      const container = $('#vCards'); container.innerHTML = '';
+      vocab.slice(0, 20).forEach((item) => {
+        const card = document.createElement('div'); card.className = 'card'; card.style.marginBottom = '8px';
+        const acc = item.reviewed ? Math.round((item.correct / item.reviewed) * 100) : 0;
+        card.innerHTML = `
+          <div class="word">${escapeHTML(item.word)}</div>
+          <div class="mean">${escapeHTML(item.meaning)}</div>
+          <div class="muted" style="font-size: 12px;">复习 ${item.reviewed||0} 次 · 正确率 ${acc}%</div>
+        `;
+        container.appendChild(card);
+      });
+    }
+    $('#addVocab').onclick = () => {
+      const word = $('#vWord').value.trim(); const meaning = $('#vMean').value.trim();
+      if (!word || !meaning) return;
+      vocab.push({ id: Date.now(), word, meaning, reviewed: 0, correct: 0 });
+      store.set('vocab', vocab); renderVocab(); $('#vWord').value=''; $('#vMean').value='';
+    };
+    $('#shuffle').onclick = () => { vocab.sort(()=>Math.random()-0.5); renderVocab(); };
+
+    $('#startQuiz').onclick = () => {
+      if (!vocab.length) return;
+      quizIdx = 0; $('#quizBox').hidden = false; $('#qBack').hidden = true;
+      $('#qFront').textContent = vocab[quizIdx].word;
+      $('#qBack').textContent = vocab[quizIdx].meaning;
+    };
+    $('#reveal').onclick = () => { $('#qBack').hidden = false; };
+    $('#know').onclick = () => gradeCard(true);
+    $('#dont').onclick = () => gradeCard(false);
+
+    function gradeCard(ok) {
+      if (quizIdx < 0) return;
+      vocab[quizIdx].reviewed = (vocab[quizIdx].reviewed||0)+1;
+      if (ok) vocab[quizIdx].correct = (vocab[quizIdx].correct||0)+1;
+      store.set('vocab', vocab);
+      quizIdx++;
+      if (quizIdx >= vocab.length) { alert('测验结束！'); $('#quizBox').hidden = true; renderVocab(); return; }
+      $('#qBack').hidden = true;
+      $('#qFront').textContent = vocab[quizIdx].word;
+      $('#qBack').textContent = vocab[quizIdx].meaning;
+    }
+
+    // ===== 图表绘制 =====
+    function drawCharts() {
+      drawChart('#chartMin', getWeekData(), 'minutes', '分钟');
+      drawChart('#chartTask', getWeekData(), 'tasks', '任务');
+    }
+
+    function drawChart(selector, data, field, unit) {
+      const canvas = $(selector); if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * 2; canvas.height = rect.height * 2; ctx.scale(2, 2);
+      const w = rect.width, h = rect.height, padding = 40, chartW = w - padding * 2, chartH = h - padding * 2;
+
+      ctx.clearRect(0, 0, w, h);
+      const textColor = getComputedStyle(document.body).color;
+      ctx.fillStyle = textColor; ctx.font = '12px system-ui';
+
+      const maxValue = Math.max(1, ...data.map(d => d[field]));
+      const barW = chartW / data.length * 0.6;
+      const gap = chartW / data.length * 0.4;
+
+      data.forEach((item, i) => {
+        const value = item[field];
+        const barH = (value / maxValue) * chartH;
+        const x = padding + i * (barW + gap);
+        const y = h - padding - barH;
+
+        ctx.fillStyle = '#50a7ff';
+        ctx.fillRect(x, y, barW, barH);
+
+        ctx.fillStyle = textColor; ctx.textAlign = 'center';
+        ctx.fillText(value + unit, x + barW / 2, y - 5);
+        ctx.fillText(item.date.slice(-5), x + barW / 2, h - padding + 20);
+      });
+    }
+
+    // ===== 快捷操作 =====
+    $('#quickMath').onclick = () => addTask('张宇1000题 · 13题', '数学一');
+    $('#quickEng').onclick  = () => addTask('英语一阅读 · 1篇精读', '英语一');
+    $('#quickPol').onclick  = () => addTask('政治 · 1000题 · 30分钟', '政治');
+    $('#quickSig').onclick  = () => addTask('信号与系统 · 例题训练 45min', '信号与系统');
+    $('#quickDig').onclick  = () => addTask('数字电路 · 核心概念复盘 45min', '数字电路');
+    $('#quickVocab').onclick = () => { document.querySelector('[data-tab="vocab"]').click(); $('#vWord').focus(); };
+    $('#quickReview').onclick = () => { document.querySelector('[data-tab="errors"]').click(); };
+
+    // ===== 浮动按钮 =====
+    $('#fab').onclick = () => { $('#taskTitle').focus(); };
+
+    // ===== 通知系统 =====
+    function showNotification(title, message) {
+      if (!('Notification' in window)) return;
+      if (Notification.permission === 'granted') new Notification(title, { body: message });
+      else if (Notification.permission !== 'denied') {
+        Notification.requestPermission().then(p => { if (p === 'granted') new Notification(title, { body: message }); });
+      }
+    }
+
+    // ===== 励志语录 =====
+    const motivationalQuotes = [
+      "每一分努力都在为梦想铺路",
+      "今日不肯埋头，明日何以抬头",
+      "成功的路上并不拥挤，因为坚持的人不多",
+      "努力到无能为力，拼搏到感动自己",
+      "你的努力，终将成就更好的自己",
+      "不为失败找理由，只为成功找方法"
+    ];
+    function updateMotivation() {
+      const quote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
+      $('#motivationText').textContent = quote;
+    }
+
+    // ===== 笔记系统 =====
+    const editor = $('#editor');
+    editor.innerHTML = store.get('notes', '');
+    editor.oninput = () => store.set('notes', editor.innerHTML);
+    $('#clearNotes').onclick = () => { if (confirm('确认清空笔记？')) { editor.innerHTML = ''; store.set('notes', ''); } };
+    $$('.toolbar [data-cmd]').forEach(btn => btn.onclick = () => document.execCommand(btn.dataset.cmd, false, null));
+
+    // ===== 阶段周计划 & 时间规划表 =====
+    let wkPlan = store.get('wkPlan', null);
+    let timetable = store.get('timetable', null);
+    const defaultWkPlan = {
+      "基础期":[
+        "数学一：每日 13 题 + 错题复盘 20min",
+        "英语一：每日 1 篇阅读 + 生词整理",
+        "信号与系统：概念 + 例题 45min",
+        "数字电路：章节复习 45min",
+        "政治：每日 30min（刷题或背诵）"
+      ],
+      "强化期":[
+        "数学一：真题/套题 1 套 + 订正",
+        "英语一：完形/新题型/翻译 交替训练",
+        "信号与系统：专题突破（频域/时域）",
+        "数字电路：综合题训练",
+        "政治：选择题 + 主观题框架"
+      ],
+      "冲刺期":[
+        "数学一：套题计时训练 + 纠错本回看",
+        "英语一：真题二刷 + 作文模板打磨",
+        "信号与系统：高频错题回看",
+        "数字电路：薄弱点回补",
+        "政治：押题卷 + 答题卡演练"
+      ]
+    };
+    const defaultTimetable = [
+      { time:"06:45-07:15", task:"起床 & 早读英语一词汇/短语" },
+      { time:"07:30-09:30", task:"数学一 · 刷题（番茄×4）" },
+      { time:"09:45-10:30", task:"信号与系统 · 例题" },
+      { time:"10:45-11:30", task:"数字电路 · 例题/概念" },
+      { time:"14:00-15:30", task:"英语一 · 阅读精读（番茄×3）" },
+      { time:"15:45-16:30", task:"政治 · 1000题/背诵" },
+      { time:"19:30-20:30", task:"错题/总结 · 任一科" },
+      { time:"20:45-21:30", task:"自由机动/拉伸放松" }
+    ];
+
+    if (!wkPlan) wkPlan = JSON.parse(JSON.stringify(defaultWkPlan));
+    if (!timetable) timetable = JSON.parse(JSON.stringify(defaultTimetable));
+
+    function renderWkPlan() {
+      const stage = $('#stageSel').value;
+      const list = $('#wkList'); list.innerHTML = '';
+      (wkPlan[stage] || []).forEach((line, idx)=>{
+        const li = document.createElement('li');
+        li.innerHTML = `
+          <div class="row" style="gap:8px">
+            <input value="${escapeHTML(line)}" oninput="updateWkItem('${stage}', ${idx}, this.value)" />
+            <button class="btn ghost" onclick="delWkItem('${stage}', ${idx})">删除</button>
+          </div>`;
+        list.appendChild(li);
+      });
+    }
+    function renderTimetable() {
+      const box = $('#ttBox'); box.innerHTML='';
+      timetable.forEach((slot, idx)=>{
+        const row = document.createElement('div'); row.className='tt-row';
+        row.innerHTML = `
+          <div class="tt-time"><input value="${escapeHTML(slot.time)}" oninput="updateSlot(${idx}, 'time', this.value)" /></div>
+          <div><input value="${escapeHTML(slot.task)}" oninput="updateSlot(${idx}, 'task', this.value)" />
+          <div class="row" style="margin-top:6px"><button class="btn ghost" onclick="delSlot(${idx})">删除</button></div></div>`;
+        box.appendChild(row);
+      });
+    }
+    window.updateWkItem = (stage, idx, val)=>{ wkPlan[stage][idx]=val; };
+    window.delWkItem = (stage, idx)=>{ wkPlan[stage].splice(idx,1); renderWkPlan(); };
+    window.updateSlot = (idx, key, val)=>{ timetable[idx][key]=val; };
+    window.delSlot = (idx)=>{ timetable.splice(idx,1); renderTimetable(); };
+
+    $('#stageSel').onchange = renderWkPlan;
+    $('#addWeekItem').onclick = ()=>{ const s=$('#stageSel').value; wkPlan[s]=wkPlan[s]||[]; wkPlan[s].push(''); renderWkPlan(); };
+    $('#addSlot').onclick = ()=>{ timetable.push({ time:'', task:'' }); renderTimetable(); };
+    $('#savePlanBtn').onclick = ()=>{ store.set('wkPlan', wkPlan); store.set('timetable', timetable); alert('已保存'); };
+    $('#restoreDefaultPlan').onclick = ()=>{ if(confirm('恢复默认模板会覆盖当前内容，确定？')){ wkPlan=JSON.parse(JSON.stringify(defaultWkPlan)); timetable=JSON.parse(JSON.stringify(defaultTimetable)); renderWkPlan(); renderTimetable(); } };
+
+    // ===== 备份 / 还原 / 清空 =====
+    $('#backupBtn').onclick = ()=>{
+      const data = store.all();
+      const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'study-backup.json'; a.click();
+      URL.revokeObjectURL(url);
+    };
+    $('#restoreBtn').onclick = ()=> $('#restoreFile').click();
+    $('#restoreFile').onchange = (e)=>{
+      const f = e.target.files[0]; if (!f) return;
+      const reader = new FileReader();
+      reader.onload = ()=>{
+        try{
+          const obj = JSON.parse(reader.result);
+          // 清空后写入
+          store.clearAll();
+          Object.keys(obj).forEach(k=> localStorage.setItem(k, JSON.stringify(obj[k])));
+          alert('还原完成，页面将刷新');
+          location.reload();
+        }catch(err){ alert('文件格式错误'); }
+      };
+      reader.readAsText(f);
+    };
+    $('#resetAllBtn').onclick = ()=>{
+      if (confirm('确定清空本地所有学习数据（v2 命名空间）？不可恢复。')) { store.clearAll(); location.reload(); }
+    };
+
+    // ===== 初始化（新的默认数据种子） =====
+    function seedIfEmpty() {
+      if (!store.get('seeded', false)) {
+        const seedTasks = [
+          {title:'张宇1000题 · 基础 13题', subject:'数学一', pri:'P2'},
+          {title:'英语一阅读 · 2010 Text1 精读', subject:'英语一', pri:'P2'},
+          {title:'信号与系统 · 卷积性质例题', subject:'信号与系统', pri:'P2'},
+          {title:'数字电路 · 触发器与时序分析', subject:'数字电路', pri:'P2'},
+          {title:'政治 · 1000题 第一章 30min', subject:'政治', pri:'P3'}
+        ];
+        tasks = seedTasks.map(s=>({
+          id: Date.now()+Math.random(),
+          title:s.title, subject:s.subject, due:null, priority:s.pri,
+          done:false, createdAt:Date.now(), doneAt:null
+        }));
+        store.set('tasks', tasks);
+
+        vocab = [
+          {id:Date.now()+1, word:'notwithstanding', meaning:'尽管；虽然', reviewed:0, correct:0},
+          {id:Date.now()+2, word:'convolution', meaning:'卷积', reviewed:0, correct:0},
+          {id:Date.now()+3, word:'flip-flop', meaning:'触发器', reviewed:0, correct:0},
+        ];
+        store.set('vocab', vocab);
+
+        store.set('wkPlan', wkPlan);
+        store.set('timetable', timetable);
+
+        store.set('seeded', true);
+      }
+    }
+
+    // ===== 安全输出 =====
+    function escapeHTML(str=''){
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // ===== 页面初始化 =====
+    function init() {
+      seedIfEmpty();
+      applyFilterPills();
+      initTabs();
+      renderTasks();
+      renderExams();
+      renderErrors();
+      renderVocab();
+      renderWkPlan();
+      renderTimetable();
+      updateStats();
+      updateCalendar();
+      updateMotivation();
+      drawCharts();
+      setInterval(updateMotivation, 3600000); // 每小时更新一条励志语录
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
+
+    // 暴露全局函数供HTML调用
+    window.toggleTask = toggleTask;
+    window.deleteTask = deleteTask;
+  </script>
+</body>
+</html>
