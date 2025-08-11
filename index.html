@@ -509,7 +509,7 @@
     const $ = sel => document.querySelector(sel);
     const $$ = sel => Array.from(document.querySelectorAll(sel));
     const fmt2 = n => String(n).padStart(2,'0');
-    const todayKey = (d=new Date()) => \`\${d.getFullYear()}-\${fmt2(d.getMonth()+1)}-\${fmt2(d.getDate())}\`;
+    const todayKey = (d=new Date()) => `${d.getFullYear()}-${fmt2(d.getMonth()+1)}-${fmt2(d.getDate())}`;
 
     // 简易存储
     const store = {
@@ -553,7 +553,7 @@
     // ===== 时钟 =====
     function updateClock() {
       const now = new Date();
-      $('#now').textContent = \`\${fmt2(now.getHours())}:\${fmt2(now.getMinutes())}\`;
+      $('#now').textContent = `${fmt2(now.getHours())}:${fmt2(now.getMinutes())}`;
     }
     setInterval(updateClock, 1000);
     updateClock();
@@ -566,7 +566,7 @@
       const now = new Date();
       const days = Math.ceil((target - now) / (1000 * 60 * 60 * 24));
       $('#dLeft').textContent = days >= 0 ? days : 0;
-      $('#motivationSub').textContent = \`距离考研还有 \${days >= 0 ? days : 0} 天，今天也要全力以赴！\`;
+      $('#motivationSub').textContent = `距离考研还有 ${days >= 0 ? days : 0} 天，今天也要全力以赴！`;
     }
     examDate.onchange = () => { store.set('examDate', examDate.value); updateCountdown(); };
     updateCountdown();
@@ -584,7 +584,7 @@
     function updatePomodoroDisplay() {
       const mins = Math.floor(pomodoro.timeLeft / 60);
       const secs = pomodoro.timeLeft % 60;
-      const timeStr = \`\${fmt2(mins)}:\${fmt2(secs)}\`;
+      const timeStr = `${fmt2(mins)}:${fmt2(secs)}`;
       $('#time').textContent = timeStr;
       $('#focusTime').textContent = timeStr;
 
@@ -592,7 +592,7 @@
       $('#modeLabel').textContent = modeText;
       $('#focusStatusText').textContent = modeText;
 
-      $('#cycleInfo').textContent = \`第 \${pomodoro.cycle} 轮\`;
+      $('#cycleInfo').textContent = `第 ${pomodoro.cycle} 轮`;
 
       $$('.modes .btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.mode === pomodoro.mode);
@@ -692,7 +692,7 @@
       const today = store.get('log_' + todayKey(), { minutes: 0, tasks: 0, pomodoros: 0 });
       const goal = parseInt($('#goalMin').value) || 180;
 
-      $('#todayProgress').textContent = \`今日专注 \${today.minutes} 分钟 · \${today.pomodoros} 个番茄 · \${today.tasks} 个任务\`;
+      $('#todayProgress').textContent = `今日专注 ${today.minutes} 分钟 · ${today.pomodoros} 个番茄 · ${today.tasks} 个任务`;
 
       const goalHit = today.minutes >= goal;
       $('#goalHit').textContent = goalHit ? '已达成' : '未达成';
@@ -834,8 +834,8 @@
 
       $('#mathProgress').style.width = mathPct + '%';
       $('#engProgress').style.width = engPct + '%';
-      $('#mathProgressText').textContent = \`\${doneMath} / \${mathTarget} 题\`;
-      $('#engProgressText').textContent  = \`\${doneEng} / \${engTarget} 篇\`;
+      $('#mathProgressText').textContent = `${doneMath} / ${mathTarget} 题`;
+      $('#engProgressText').textContent  = `${doneEng} / ${engTarget} 篇`;
 
       // 自定义目标
       const box = $('#customGoals');
@@ -921,7 +921,7 @@
             <div style="flex:1;">
               <strong>${error.subject} - ${escapeHTML(error.title)}</strong>
               <div class="muted">${error.date}</div>
-              <div class="error-content">${escapeHTML(error.content).replace(/\\n/g,'<br>')}</div>
+              <div class="error-content">${escapeHTML(error.content).replace(/\n/g,'<br>')}</div>
             </div>
             <div class="row">
               <button class="btn ${error.reviewed ? 'success' : 'ghost'}" onclick="toggleErrorReview(${error.id})">${error.reviewed ? '已复习' : '待复习'}</button>
@@ -947,7 +947,7 @@
     function updateCalendar() {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
-      $('#ymLabel').textContent = \`\${year}年\${month + 1}月\`;
+      $('#ymLabel').textContent = `${year}年${month + 1}月`;
       const calendar = $('#calendar'); calendar.innerHTML = '';
 
       const firstDay = new Date(year, month, 1);
@@ -966,8 +966,8 @@
         if (dayLog.minutes >= goal) dayEl.classList.add('good');
         else if (dayLog.minutes > 0) dayEl.classList.add('bad');
 
-        dayEl.innerHTML = `<div class="d">\${date.getDate()}</div><div class="dot"></div>`;
-        dayEl.title = \`\${dateStr}: \${dayLog.minutes || 0}分钟\`;
+        dayEl.innerHTML = `<div class="d">${date.getDate()}</div><div class="dot"></div>`;
+        dayEl.title = `${dateStr}: ${dayLog.minutes || 0}分钟`;
         calendar.appendChild(dayEl);
       }
     }
@@ -1079,12 +1079,12 @@
 
     // ===== 励志语录 =====
     const motivationalQuotes = [
-      "每一分努力都在为梦想铺路",
-      "今日不肯埋头，明日何以抬头",
-      "成功的路上并不拥挤，因为坚持的人不多",
-      "努力到无能为力，拼搏到感动自己",
-      "你的努力，终将成就更好的自己",
-      "不为失败找理由，只为成功找方法"
+      "111111111",
+      "2222222222",
+      "33333333",
+      "444444444444444",
+      "455555555555555555",
+      "6666666666666666"
     ];
     function updateMotivation() {
       const quote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
