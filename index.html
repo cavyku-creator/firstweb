@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>每日任务清单 · 分组/批量/本地保存</title>
-<meta name="description" content="根据当天日期显示任务，支持分组、单条与批量增删，本地存储自动保存。">
+<title>每日任务清单 · 标签分组/批量/本地保存</title>
+<meta name="description" content="根据当天日期显示任务，支持分组标签切换、单条与批量增删、本地存储自动保存。">
 <style>
   :root{
     --bg:#0b0f14; --panel:#121821; --panel-hi:#16202b;
@@ -45,10 +45,23 @@
   }
   input[type="text"]::placeholder, textarea::placeholder{color:#7f8b99}
   .toolbar{
-    display:grid;gap:12px;grid-template-columns:1fr; padding:16px 24px 20px;border-bottom:1px solid var(--border);
+    display:grid;gap:12px;grid-template-columns:1fr; padding:16px 24px 14px;border-bottom:1px solid var(--border);
   }
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
   .grow{flex:1}
+  /* Tabs bar */
+  .tabsbar{
+    display:flex;gap:8px;align-items:center;padding:10px 16px 14px;border-bottom:1px solid var(--border);
+    overflow-x:auto;scrollbar-width:thin
+  }
+  .tab{
+    flex:0 0 auto;display:flex;align-items:center;gap:8px;
+    padding:7px 12px;border-radius:999px;border:1px solid var(--border);background:var(--panel);cursor:pointer;font-size:14px;color:var(--text);
+    transition:.2s transform, .2s border-color, .2s background;
+  }
+  .tab:hover{transform:translateY(-1px)}
+  .tab.active{background:linear-gradient(180deg,#1b2633,#111a25);border-color:#2a3a4f;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+  .tab .count{color:var(--muted);font-variant-numeric:tabular-nums;border:1px solid var(--border);padding:0 6px;border-radius:10px;font-size:12px}
   main{padding:24px}
   .stats{display:flex;gap:16px;flex-wrap:wrap;color:var(--muted);font-size:14px;margin-top:-4px}
   .groups{display:flex;flex-direction:column;gap:16px}
@@ -84,13 +97,8 @@
   .dlg-actions{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
   .hint{font-size:13px;color:var(--muted)}
   .danger-text{color:#ff8b8b}
-  .link{color:#9ecbff;text-decoration:none;border-bottom:1px dashed #2a3a4f}
-  .counter{font-variant-numeric:tabular-nums}
   .kbd{border:1px solid var(--border);border-bottom-color:#1d2a38;background:#0d131a;padding:1px 6px;border-radius:6px;font-size:12px}
-  /* small screens */
-  @media (max-width:640px){
-    .toolbar{grid-template-columns:1fr}
-  }
+  @media (max-width:640px){ .toolbar{grid-template-columns:1fr} }
 </style>
 </head>
 <body>
@@ -109,6 +117,7 @@
         <button class="pill danger" id="btnDeleteSelected">删除选中</button>
       </div>
     </div>
+
     <div class="toolbar">
       <div class="row">
         <label class="muted">查看日期：</label>
@@ -116,23 +125,26 @@
         <span class="badge" id="statSummary">—</span>
         <span class="select-all">
           <input type="checkbox" id="checkAll">
-          <label for="checkAll">全选 / 取消</label>
+          <label for="checkAll">全选 / 取消（当前标签）</label>
         </span>
       </div>
       <div class="row">
         <input class="grow" type="text" id="inputTitle" placeholder="输入任务内容，回车或点右侧按钮添加…" />
-        <select id="selectGroup"></select>
+        <select id="selectGroup" title="新增时的分组"></select>
         <button class="pill primary" id="btnAdd">新增任务</button>
-        <button class="pill ok" id="btnClearDone">清除已完成</button>
+        <button class="pill ok" id="btnClearDone">清除已完成（当前标签）</button>
       </div>
       <div class="stats" id="statsLine"></div>
     </div>
+
+    <!-- 顶部标签栏：分组切换 -->
+    <div class="tabsbar" id="tabsBar"></div>
   </header>
 
   <main class="wrap">
     <div id="groupsContainer" class="groups"></div>
     <div class="footnote">
-      数据自动保存在本地浏览器（localStorage）。按 <span class="kbd">E</span> 可快速编辑任务标题，按 <span class="kbd">Delete</span> 删除选中。
+      数据自动保存在本地浏览器（localStorage）。按 <span class="kbd">E</span> 快速编辑任务标题，按 <span class="kbd">Delete</span> 删除选中。切换标签=切换分组视图；“全部”显示所有分组。
     </div>
   </main>
 
@@ -143,7 +155,7 @@
       <button class="pill" data-close="#dlgBatch">关闭</button>
     </div>
     <div class="dlg-body">
-      <div class="hint">每行一条，支持以下格式：</div>
+      <div class="hint">每行一条，支持：</div>
       <ul class="hint">
         <li><code>任务内容</code>（日期=当前选择日期；分组=下方选择或默认“未分组”）</li>
         <li><code>组名 | 任务内容</code></li>
@@ -172,7 +184,7 @@
         <input class="grow" type="text" id="groupNewName" placeholder="输入新分组名后回车或点右侧按钮" />
         <button class="pill primary" id="btnGroupAdd">新增分组</button>
       </div>
-      <div class="hint" style="margin-bottom:10px">重命名：点击名称即可编辑。删除分组将把该分组任务移至“未分组”。</div>
+      <div class="hint" style="margin-bottom:10px">重命名：点击名称即可编辑。删除分组会把该组任务移至“未分组”。</div>
       <div id="groupsList"></div>
     </div>
     <div class="dlg-actions">
@@ -182,13 +194,10 @@
 
 <script>
 (function(){
-  const KEYS = {
-    TASKS: 'td_v1_tasks',
-    GROUPS: 'td_v1_groups'
-  };
+  const KEYS = { TASKS:'td_v1_tasks', GROUPS:'td_v1_groups', ACTIVE:'td_v1_activeGroup' };
   const DEFAULT_GROUP = '未分组';
+  const ALL_GROUP = '全部';
 
-  /** @type {HTMLInputElement} */
   const datePicker = document.getElementById('datePicker');
   const todayLabel = document.getElementById('todayLabel');
   const inputTitle = document.getElementById('inputTitle');
@@ -200,6 +209,7 @@
   const statSummary = document.getElementById('statSummary');
   const statsLine = document.getElementById('statsLine');
   const groupsContainer = document.getElementById('groupsContainer');
+  const tabsBar = document.getElementById('tabsBar');
 
   const dlgBatch = document.getElementById('dlgBatch');
   const btnBatch = document.getElementById('btnBatch');
@@ -214,6 +224,7 @@
   const btnGroupAdd = document.getElementById('btnGroupAdd');
 
   let selectedDate = toYMD(new Date());
+  let activeGroup = localStorage.getItem(KEYS.ACTIVE) || ALL_GROUP;
 
   const store = {
     getTasks(){ return JSON.parse(localStorage.getItem(KEYS.TASKS) || '[]'); },
@@ -223,10 +234,14 @@
       if(!g.includes(DEFAULT_GROUP)) g.unshift(DEFAULT_GROUP);
       return Array.from(new Set(g));
     },
-    setGroups(list){ 
+    setGroups(list){
       const uniq = Array.from(new Set(list));
       if(!uniq.includes(DEFAULT_GROUP)) uniq.unshift(DEFAULT_GROUP);
-      localStorage.setItem(KEYS.GROUPS, JSON.stringify(uniq)); 
+      localStorage.setItem(KEYS.GROUPS, JSON.stringify(uniq));
+    },
+    setActive(name){
+      activeGroup = name;
+      localStorage.setItem(KEYS.ACTIVE, name);
     }
   };
 
@@ -245,136 +260,170 @@
     if (crypto && crypto.randomUUID) return crypto.randomUUID();
     return 'id-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);
   }
-
-  function refreshGroupSelects(){
-    const groups = store.getGroups();
-    const options = groups.map(g=>`<option value="${encodeHTML(g)}">${escapeHTML(g)}</option>`).join('');
-    selectGroup.innerHTML = options;
-    batchDefaultGroup.innerHTML = options;
-  }
-
   function encodeHTML(s){ return s.replace(/"/g,'&quot;'); }
   function escapeHTML(s){ return s.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
 
-  function render(){
-    const tasks = store.getTasks();
-    const todayTasks = tasks.filter(t=>t.date===selectedDate);
-    const total = todayTasks.length;
-    const done = todayTasks.filter(t=>t.done).length;
+  function refreshGroupSelects(){
+    const groups = store.getGroups();
+    const opts = groups.map(g=>`<option value="${encodeHTML(g)}"${g===activeGroup?' selected':''}>${escapeHTML(g)}</option>`).join('');
+    selectGroup.innerHTML = opts;
+    batchDefaultGroup.innerHTML = opts;
+  }
 
-    statSummary.textContent = `当日：完成 ${done}/${total}`;
+  // ===== 顶部标签栏 =====
+  function renderTabs(){
+    const groups = store.getGroups();
+    const tasks = store.getTasks().filter(t=>t.date===selectedDate);
+    const countOf = (g)=> g===ALL_GROUP ? tasks.length : tasks.filter(t=>t.group===g).length;
+
+    const tabs = [ALL_GROUP, ...groups];
+    tabsBar.innerHTML = tabs.map(g=>{
+      const c = countOf(g);
+      const active = g===activeGroup ? 'active' : '';
+      return `<button class="tab ${active}" data-tab="${encodeHTML(g)}">
+                <span>${escapeHTML(g)}</span>
+                <span class="count">${c}</span>
+              </button>`;
+    }).join('');
+
+    tabsBar.querySelectorAll('.tab').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const g = btn.getAttribute('data-tab');
+        store.setActive(g);
+        // 切换时让“新增任务”的分组下拉默认跟随
+        if(g!==ALL_GROUP) selectGroup.value = g;
+        renderTabs();
+        render();
+      });
+    });
+  }
+
+  // ===== 主渲染 =====
+  function render(){
+    const all = store.getTasks();
+    const inDate = all.filter(t=>t.date===selectedDate);
+
+    const filtered = activeGroup===ALL_GROUP ? inDate : inDate.filter(t=>t.group===activeGroup);
+    const total = filtered.length;
+    const done = filtered.filter(t=>t.done).length;
+
+    statSummary.textContent = `当日（${activeGroup}）：完成 ${done}/${total}`;
     statsLine.innerHTML = `
-      <span>全部任务：<span class="counter">${tasks.length}</span></span>
+      <span>全部任务：<span class="counter">${all.length}</span></span>
       <span>当前日期：<span class="counter">${selectedDate}</span></span>
       <span>分组数量：<span class="counter">${store.getGroups().length}</span></span>
-      <span>未完成（当日）：<span class="counter">${total - done}</span></span>
+      <span>未完成（当前标签）：<span class="counter">${total - done}</span></span>
     `;
 
-    const byGroup = {};
-    for(const t of todayTasks){
-      if(!byGroup[t.group]) byGroup[t.group] = [];
-      byGroup[t.group].push(t);
-    }
-    const groupOrder = store.getGroups().filter(g=>byGroup[g]?.length).concat(
-      Object.keys(byGroup).filter(g=>!store.getGroups().includes(g))
-    );
-
-    groupsContainer.innerHTML = '';
-    if (total === 0){
+    groupsContainer.innerHTML='';
+    if(total===0){
       const div = document.createElement('div');
       div.className='empty';
-      div.textContent='今天还没有任务，试试上方“新增任务”或“批量添加”。';
+      div.textContent = activeGroup===ALL_GROUP
+        ? '今天还没有任务，试试上方“新增任务”或“批量添加”。'
+        : `今天「${activeGroup}」暂时没有任务。`;
       groupsContainer.appendChild(div);
       return;
     }
 
-    const frag = document.createDocumentFragment();
-    for(const gName of groupOrder){
-      const items = byGroup[gName] || [];
-      const section = document.createElement('section');
-      section.className='group';
-      section.innerHTML = `
-        <header>
-          <div style="display:flex;align-items:center;gap:10px">
-            <strong>${escapeHTML(gName)}</strong>
-            <span class="badge">共 ${items.length} 条 · 完成 ${items.filter(t=>t.done).length}</span>
-          </div>
-          <div class="row">
-            <button class="pill" data-collapse>折叠/展开</button>
-          </div>
-        </header>
-        <div class="tasks"></div>
-      `;
-      const tasksBox = section.querySelector('.tasks');
-      for(const t of items.sort((a,b)=>Number(a.done)-Number(b.done) || a.createdAt-b.createdAt)){
-        const div = document.createElement('div');
-        div.className='task';
-        div.dataset.id = t.id;
-        div.innerHTML = `
-          <input type="checkbox" class="sel" ${t.sel?'checked':''} title="选中用于批量操作">
-          <div style="display:flex;align-items:center;gap:10px">
-            <input type="checkbox" class="chk" ${t.done?'checked':''} title="完成/未完成">
-            <span class="title ${t.done?'done':''}" contenteditable="false" spellcheck="false" title="双击编辑">${escapeHTML(t.title)}</span>
-          </div>
-          <span class="muted" style="font-size:12px">${t.group ? escapeHTML(t.group) : DEFAULT_GROUP}</span>
-          <button class="pill danger btn-del" title="删除此任务">删除</button>
-        `;
-        tasksBox.appendChild(div);
+    // “全部” -> 分组分块；单一标签 -> 单块
+    if(activeGroup===ALL_GROUP){
+      const byGroup = {};
+      for(const t of inDate){
+        (byGroup[t.group] ??= []).push(t);
       }
-      // collapse toggle
-      section.querySelector('[data-collapse]').addEventListener('click', ()=>{
-        tasksBox.style.display = tasksBox.style.display==='none' ? '' : 'none';
-      });
-      frag.appendChild(section);
+      const groupOrder = store.getGroups().filter(g=>byGroup[g]?.length).concat(
+        Object.keys(byGroup).filter(g=>!store.getGroups().includes(g))
+      );
+      for(const gName of groupOrder){
+        groupsContainer.appendChild(buildGroupSection(gName, byGroup[gName]));
+      }
+    }else{
+      groupsContainer.appendChild(buildGroupSection(activeGroup, filtered));
     }
-    groupsContainer.appendChild(frag);
   }
 
+  function buildGroupSection(gName, items){
+    const section = document.createElement('section');
+    section.className='group';
+    section.innerHTML = `
+      <header>
+        <div style="display:flex;align-items:center;gap:10px">
+          <strong>${escapeHTML(gName)}</strong>
+          <span class="badge">共 ${items.length} 条 · 完成 ${items.filter(t=>t.done).length}</span>
+        </div>
+        <div class="row">
+          <button class="pill" data-collapse>折叠/展开</button>
+        </div>
+      </header>
+      <div class="tasks"></div>
+    `;
+    const tasksBox = section.querySelector('.tasks');
+
+    for(const t of items.sort((a,b)=>Number(a.done)-Number(b.done) || a.createdAt-b.createdAt)){
+      const div = document.createElement('div');
+      div.className='task';
+      div.dataset.id = t.id;
+      div.innerHTML = `
+        <input type="checkbox" class="sel" ${t.sel?'checked':''} title="选中用于批量操作">
+        <div style="display:flex;align-items:center;gap:10px">
+          <input type="checkbox" class="chk" ${t.done?'checked':''} title="完成/未完成">
+          <span class="title ${t.done?'done':''}" contenteditable="false" spellcheck="false" title="双击编辑">${escapeHTML(t.title)}</span>
+        </div>
+        <span class="muted" style="font-size:12px">${t.group ? escapeHTML(t.group) : DEFAULT_GROUP}</span>
+        <button class="pill danger btn-del" title="删除此任务">删除</button>
+      `;
+      tasksBox.appendChild(div);
+    }
+    section.querySelector('[data-collapse]').addEventListener('click', ()=>{
+      tasksBox.style.display = tasksBox.style.display==='none' ? '' : 'none';
+    });
+    return section;
+  }
+
+  // ===== 操作函数 =====
   function addTask({title, group, date}){
     title = title?.trim();
     if(!title) return;
     const tasks = store.getTasks();
     tasks.push({
-      id: uuid(),
-      title,
-      group: group || DEFAULT_GROUP,
-      date: date || selectedDate,
-      done:false,
-      sel:false,
-      createdAt: Date.now()
+      id: uuid(), title, group: group || DEFAULT_GROUP, date: date || selectedDate,
+      done:false, sel:false, createdAt: Date.now()
     });
     store.setTasks(tasks);
+    renderTabs();
     render();
   }
-
   function deleteTask(id){
     const tasks = store.getTasks().filter(t=>t.id!==id);
     store.setTasks(tasks);
+    renderTabs();
     render();
   }
 
-  function deleteSelectedInCurrentDate(){
+  function deleteSelectedInScope(){
     const tasks = store.getTasks();
-    const left = tasks.filter(t => !(t.date===selectedDate && t.sel));
+    const left = tasks.filter(t => !(t.date===selectedDate && (activeGroup===ALL_GROUP || t.group===activeGroup) && t.sel));
     const removed = tasks.length - left.length;
-    if(removed===0){ alert('未选择任何任务。'); return; }
+    if(removed===0){ alert('未选择任何任务（当前标签）。'); return; }
     if(!confirm(`确认删除选中的 ${removed} 条任务？`)) return;
     store.setTasks(left);
+    renderTabs();
     render();
   }
 
-  function clearDoneInCurrentDate(){
+  function clearDoneInScope(){
     const tasks = store.getTasks();
-    const left = tasks.filter(t => !(t.date===selectedDate && t.done));
+    const left = tasks.filter(t => !(t.date===selectedDate && (activeGroup===ALL_GROUP || t.group===activeGroup) && t.done));
     const removed = tasks.length - left.length;
-    if(removed===0){ alert('当日没有已完成任务。'); return; }
-    if(!confirm(`确认清除当日已完成的 ${removed} 条任务？`)) return;
+    if(removed===0){ alert('当前标签没有已完成任务。'); return; }
+    if(!confirm(`确认清除当前标签已完成的 ${removed} 条任务？`)) return;
     store.setTasks(left);
+    renderTabs();
     render();
   }
 
-  // ======== 事件绑定 ========
-  // 初始化日期
+  // ===== 事件绑定 =====
   datePicker.value = selectedDate;
   todayLabel.textContent = `今天：${selectedDate}（周${weekdayCN(selectedDate)}）`;
 
@@ -382,10 +431,11 @@
     selectedDate = datePicker.value || toYMD(new Date());
     todayLabel.textContent = `查看：${selectedDate}（周${weekdayCN(selectedDate)}）`;
     checkAll.checked = false;
+    renderTabs();
     render();
   });
 
-  // 单条添加
+  // 新增
   btnAdd.addEventListener('click', ()=>{
     addTask({title: inputTitle.value, group: selectGroup.value, date: selectedDate});
     inputTitle.value='';
@@ -398,6 +448,8 @@
   // 批量添加
   btnBatch.addEventListener('click', ()=>{
     refreshGroupSelects();
+    // 批量默认选中当前标签（若是“全部”则回退为“未分组”）
+    batchDefaultGroup.value = activeGroup===ALL_GROUP ? DEFAULT_GROUP : activeGroup;
     batchText.value='';
     dlgBatch.showModal();
   });
@@ -420,11 +472,11 @@
       }
     }
     const tasks = store.getTasks();
-    for(const t of tasksToAdd){
-      tasks.push({id:uuid(), title:t.title, group:t.group, date:t.date, done:false, sel:false, createdAt:Date.now()});
-    }
+    const now = Date.now();
+    tasksToAdd.forEach((t,i)=> tasks.push({id:uuid(), title:t.title, group:t.group, date:t.date, done:false, sel:false, createdAt:now+i}));
     store.setTasks(tasks);
     dlgBatch.close();
+    renderTabs();
     render();
   });
 
@@ -443,6 +495,7 @@
     groupNewName.value='';
     renderGroupsManager();
     refreshGroupSelects();
+    renderTabs();
     render();
   });
   groupNewName.addEventListener('keydown', e=>{
@@ -476,7 +529,9 @@
         const tasks = store.getTasks();
         for(const t of tasks){ if(t.group===g) t.group=newName; }
         store.setTasks(tasks);
-        renderGroupsManager(); refreshGroupSelects(); render();
+        // 若重命名的是当前激活标签，同步更新
+        if(activeGroup===g){ store.setActive(newName); }
+        renderGroupsManager(); refreshGroupSelects(); renderTabs(); render();
       });
 
       btnDel.addEventListener('click', ()=>{
@@ -486,7 +541,9 @@
         const tasks = store.getTasks();
         for(const t of tasks){ if(t.group===g) t.group = DEFAULT_GROUP; }
         store.setTasks(tasks);
-        renderGroupsManager(); refreshGroupSelects(); render();
+        // 若删除的是当前激活标签，回退到“全部”
+        if(activeGroup===g){ store.setActive(ALL_GROUP); }
+        renderGroupsManager(); refreshGroupSelects(); renderTabs(); render();
       });
 
       row.appendChild(input);
@@ -497,21 +554,22 @@
     groupsList.appendChild(box);
   }
 
-  // 删除选中
-  btnDeleteSelected.addEventListener('click', deleteSelectedInCurrentDate);
+  // 删除选中/清除完成（限定于“当前日期 + 当前标签”）
+  btnDeleteSelected.addEventListener('click', deleteSelectedInScope);
+  btnClearDone.addEventListener('click', clearDoneInScope);
 
-  // 清除已完成
-  btnClearDone.addEventListener('click', clearDoneInCurrentDate);
-
-  // 全选/取消
+  // 全选（限定当前标签）
   checkAll.addEventListener('change', ()=>{
     const tasks = store.getTasks();
-    for(const t of tasks){ if(t.date===selectedDate) t.sel = checkAll.checked; }
+    for(const t of tasks){
+      const inScope = t.date===selectedDate && (activeGroup===ALL_GROUP || t.group===activeGroup);
+      if(inScope) t.sel = checkAll.checked;
+    }
     store.setTasks(tasks);
     render();
   });
 
-  // 任务区事件委派：选择、完成、删除、编辑
+  // 任务区：选择、完成、删除、编辑
   groupsContainer.addEventListener('change', (e)=>{
     const el = e.target;
     const taskEl = el.closest('.task');
@@ -526,7 +584,8 @@
     }else if(el.classList.contains('chk')){
       t.done = el.checked;
       store.setTasks(tasks);
-      render(); // 重新渲染以更新样式与统计
+      renderTabs();
+      render();
     }
   });
   groupsContainer.addEventListener('click', (e)=>{
@@ -536,7 +595,7 @@
       if(confirm('确认删除该任务？')) deleteTask(id);
     }
   });
-  // 双击标题进入编辑，回车/失焦保存，Esc 取消
+  // 双击标题编辑
   groupsContainer.addEventListener('dblclick', (e)=>{
     const titleEl = e.target.closest('.title');
     if(!titleEl) return;
@@ -570,7 +629,7 @@
     render();
   }, true);
 
-  // 快捷键：E 编辑选中第一条；Delete 删除选中
+  // 快捷键：E 编辑选中第一条；Delete 删除选中（当前标签）
   document.addEventListener('keydown', (e)=>{
     if(e.target.matches('input, textarea, [contenteditable="true"]')) return;
     if(e.key.toLowerCase()==='e'){
@@ -581,19 +640,19 @@
       }
     }
     if(e.key==='Delete'){
-      const hasSel = store.getTasks().some(t=>t.date===selectedDate && t.sel);
-      if(hasSel) deleteSelectedInCurrentDate();
+      const hasSel = store.getTasks().some(t=>t.date===selectedDate && (activeGroup===ALL_GROUP || t.group===activeGroup) && t.sel);
+      if(hasSel) deleteSelectedInScope();
     }
   });
 
-  // 初次引导：若没有分组/任务，填充初始示例
+  // 初次引导
   (function bootstrap(){
     if(!localStorage.getItem(KEYS.GROUPS)){
       store.setGroups([DEFAULT_GROUP, '数学', '英语一', '政治']);
     }
     if(!localStorage.getItem(KEYS.TASKS)){
       const demo = [
-        {title:'示例：点左侧勾完成/取消完成', group:DEFAULT_GROUP},
+        {title:'示例：点击上方标签切换分组视图', group:DEFAULT_GROUP},
         {title:'示例：双击标题可编辑内容', group:DEFAULT_GROUP},
         {title:'示例：试试上方“批量添加”', group:'数学'},
       ];
@@ -601,9 +660,24 @@
       const list = demo.map((d,i)=>({id:uuid(), title:d.title, group:d.group, date:selectedDate, done:false, sel:false, createdAt:now+i}));
       store.setTasks(list);
     }
+    // 如果当前激活标签被删除过，回退为“全部”
+    if(activeGroup!==ALL_GROUP && !store.getGroups().includes(activeGroup)) store.setActive(ALL_GROUP);
+
     refreshGroupSelects();
+    renderTabs();
     render();
+    // 切到非“全部”时，新建默认跟随当前标签
+    if(activeGroup!==ALL_GROUP) selectGroup.value = activeGroup;
   })();
+
+  // 通用：关闭对话框
+  document.querySelectorAll('[data-close]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const sel = btn.getAttribute('data-close');
+      const dlg = document.querySelector(sel);
+      dlg && dlg.close();
+    });
+  });
 
 })();
 </script>
