@@ -263,14 +263,14 @@
     function within(d,a,b){ return d>=a && d<=b; }
 
     // ====== 阶段定义 ======
-    var P1A = new Date('2025-08-12'); // 基础
-    var P1B = new Date('2025-09-30');
+    var P1A = parseYMD('2025-08-12'); // 基础
+    var P1B = parseYMD('2025-09-30');
 
-    var P2A = new Date('2025-10-01'); // 强化
-    var P2B = new Date('2025-11-15');
+    var P2A = parseYMD('2025-10-01'); // 强化
+    var P2B = parseYMD('2025-11-15');
 
-    var P3A = new Date('2025-11-16'); // 冲刺
-    var P3B = new Date('2025-12-20');
+    var P3A = parseYMD('2025-11-16'); // 冲刺
+    var P3B = parseYMD('2025-12-20');
 
     function stageOf(d){ return within(d,P1A,P1B)?'基础' : within(d,P2A,P2B)?'强化' : '冲刺'; }
 
@@ -760,6 +760,13 @@
         try{ var ok = fn(); results.push({name:name, ok:ok, msg: ok? 'PASS' : 'FAIL'}); }
         catch(err){ results.push({name:name, ok:false, msg:'ERR: '+err.message}); }
       }
+      // 0) 阶段边界判定（新增）
+      test('stageOf 边界：8/12 属于 基础', function(){ return stageOf(START)==='基础'; });
+      test('stageOf 边界：9/30 属于 基础', function(){ return stageOf(parseYMD('2025-09-30'))==='基础'; });
+      test('stageOf 边界：10/01 属于 强化', function(){ return stageOf(parseYMD('2025-10-01'))==='强化'; });
+      test('stageOf 边界：11/15 属于 强化', function(){ return stageOf(parseYMD('2025-11-15'))==='强化'; });
+      test('stageOf 边界：11/16 属于 冲刺', function(){ return stageOf(parseYMD('2025-11-16'))==='冲刺'; });
+
       // 1) 关键词转义不抛错（覆盖常见元字符）
       test('Regex 关键字转义（元字符）', function(){
         var kw = '.*+?^${}()|[]/中文-肖四';
@@ -769,9 +776,9 @@
       });
       // 2) 任务渲染不抛错
       test('renderTasks 不抛错', function(){
-        var prev = searchInput.value; searchInput.value = '.*[]()^$+/';
+        var prev = document.getElementById('search').value; document.getElementById('search').value = '.*[]()^$+/';
         var html = renderTasks([{id:'2025-08-12|自定义|测试',subject:'自定义',text:'测试.*[]/()^$+'}]);
-        searchInput.value = prev; return typeof html === 'string';
+        document.getElementById('search').value = prev; return typeof html === 'string';
       });
       // 3) escapeHTML 正确性
       test('escapeHTML', function(){
@@ -795,8 +802,13 @@
         }
         return true;
       });
-      // 6) 周构建函数不抛错
+      // 6) 周构建函数不抛错 & 第一周阶段展示为“基础”（新增展示检查）
       test('buildWeeks 不抛错', function(){ buildWeeks(); return document.getElementById('weeks').children.length>0; });
+      test('周视图第一周阶段显示为基础', function(){
+        buildWeeks();
+        var sum = document.querySelector('#weeks details.card > summary');
+        return !!(sum && /阶段：基础/.test(sum.textContent));
+      });
 
       var ul = document.getElementById('testResults');
       ul.innerHTML = results.map(function(r){return '<li>'+(r.ok? '✅' : '❌')+' '+r.name+' — <span class="muted">'+r.msg+'</span></li>';}).join('');
