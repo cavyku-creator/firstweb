@@ -3,19 +3,19 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>两周学习打卡 · 增强版（2025-08-12 → 2025-08-25）</title>
-  <meta name="description" content="两周作息+学习块+康复+周清+统计。支持主题切换、预设日程、周视图、任务结转、本地导入导出与打印。" />
+  <title>考研倒计时学习系统（2025-08-12 → 2025-12-20）</title>
+  <meta name="description" content="从 2025-08-12 到 2025-12-20 的日/周/月计划与打卡系统：预设日程、逐周卡片、月度目标、月视图、自动生成整期日程、倒计时与统计。全部本地存储，可打印导出。" />
   <style>
     /* ===== Theme ===== */
     :root{
-      --bg: #0b0d10; --bg-soft:#0f141a; --card:#11161c; --card-2:#0e1319; --border:#1a222d; --ring:#213043; --muted:#9fb0c2; --text:#e8eef4;
-      --accent:#7ad7ff; --accent-2:#7be497; --danger:#ff6b6b; --warn:#ffd166; --ok:#8be28f;
-      --shadow: 0 10px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.02);
+      --bg:#0b0d10; --bg-soft:#0f141a; --card:#11161c; --card-2:#0e1319; --border:#1a222d; --ring:#213043; --muted:#9fb0c2; --text:#e8eef4;
+      --accent:#7ad7ff; --accent-2:#7be497; --danger:#ff6b6b; --warn:#ffd166; --ok:#8be28f; --cyan:#5eead4; --violet:#a78bfa;
+      --shadow:0 10px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.02);
     }
     [data-theme="light"]{
       --bg:#f6f8fb; --bg-soft:#f0f4f8; --card:#ffffff; --card-2:#f7fafc; --border:#e3e9f0; --ring:#d8e2ee; --muted:#65758b; --text:#0e1726;
-      --accent:#0ea5e9; --accent-2:#10b981; --danger:#ef4444; --warn:#d97706; --ok:#16a34a;
-      --shadow: 0 10px 24px rgba(2, 6, 23, .06), inset 0 1px 0 rgba(255,255,255,.6);
+      --accent:#0ea5e9; --accent-2:#10b981; --danger:#ef4444; --warn:#d97706; --ok:#16a34a; --cyan:#06b6d4; --violet:#7c3aed;
+      --shadow:0 10px 24px rgba(2,6,23,.06), inset 0 1px 0 rgba(255,255,255,.6);
     }
 
     /* ===== Base ===== */
@@ -24,7 +24,7 @@
     body{margin:0;background:linear-gradient(180deg,var(--bg) 0%, var(--bg-soft) 60%, var(--bg) 100%);color:var(--text);font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
     a{color:var(--accent);text-decoration:none}
     a:hover{text-decoration:underline}
-    .wrap{max-width:1180px;margin:0 auto;padding:18px}
+    .wrap{max-width:1200px;margin:0 auto;padding:18px}
 
     header{position:sticky;top:0;z-index:50;background:rgba(0,0,0,.15);backdrop-filter:saturate(1.1) blur(10px);border-bottom:1px solid var(--border)}
     .topbar{display:flex;align-items:center;gap:14px}
@@ -33,9 +33,9 @@
     .spacer{flex:1}
     .toggle{appearance:none;border:1px solid var(--ring);background:var(--card);color:var(--text);padding:8px 12px;border-radius:12px;cursor:pointer}
 
-    main{max-width:1180px;margin:20px auto;padding:0 18px 120px}
-    .layout{display:grid;grid-template-columns:1.3fr .7fr;gap:18px}
-    @media (max-width:980px){.layout{grid-template-columns:1fr}}
+    main{max-width:1200px;margin:20px auto;padding:0 18px 140px}
+    .layout{display:grid;grid-template-columns:1.35fr .65fr;gap:18px}
+    @media (max-width:1000px){.layout{grid-template-columns:1fr}}
 
     .card{background:linear-gradient(180deg,var(--card) 0%, var(--card-2) 100%);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow)}
     .hd{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)}
@@ -49,7 +49,7 @@
     .btn.primary{background:linear-gradient(180deg,#0f1e2a,#0e1a24)}
     .btn.accent{background:linear-gradient(180deg,#0d2330,#0c1d2a);border-color:#1b3a4a}
     .btn.danger{background:linear-gradient(180deg,#2a1012,#220c0e);border-color:#402126;color:#ffdede}
-    .btn.ghost{opacity:.8}
+    .btn.ghost{opacity:.85}
 
     .progress{height:10px;background:var(--bg-soft);border:1px solid var(--border);border-radius:999px;overflow:hidden}
     .progress>i{display:block;height:100%;background:linear-gradient(90deg,var(--accent), var(--accent-2));width:0%}
@@ -71,14 +71,43 @@
     .split{display:grid;grid-template-columns:1fr 1fr;gap:14px}
     @media (max-width:780px){.split{grid-template-columns:1fr}}
 
+    /* Month calendar */
     .calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
-    .daycell{border:1px solid var(--border);border-radius:10px;padding:8px;text-align:center;background:var(--card-2);cursor:pointer}
+    .cal-head{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:8px}
+    .cal-head div{font-size:12px;color:var(--muted);text-align:center}
+    .daycell{border:1px solid var(--border);border-radius:10px;padding:6px 6px 8px;text-align:center;background:var(--card-2);cursor:pointer;min-height:64px;display:flex;flex-direction:column;justify-content:space-between}
+    .daycell .date{font-size:12px;color:var(--muted)}
     .daycell .bar{height:6px;border:1px solid var(--border);border-radius:999px;background:var(--bg-soft);overflow:hidden;margin-top:6px}
     .daycell .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent), var(--accent-2));width:0%}
     .daycell.today{outline:2px solid var(--accent)}
+    .daycell.out{opacity:.35}
 
-    .range{display:flex;align-items:center;gap:8px}
-    .range input[type="range"]{width:150px}
+    /* Week cards */
+    .weeklist{display:grid;gap:14px}
+    .weekcard{border:1px solid rgba(114,228,139,.35);border-radius:16px;padding:14px;background:linear-gradient(180deg,var(--card) 0%, var(--card-2) 100%);box-shadow:var(--shadow)}
+    .weekhead{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+    .weekhead .wbadge{font-weight:700}
+    .weekhead .range{padding:2px 8px;border:1px solid rgba(114,228,139,.35);border-radius:999px;font-size:12px;color:var(--muted)}
+    .weektitle{font-weight:700}
+    .wklist{margin:8px 0 0 0;padding-left:18px}
+    .wklist li{margin:6px 0}
+    details.weekcard summary{cursor:pointer;list-style:none}
+    details.weekcard summary::-webkit-details-marker{display:none}
+    details.weekcard[open] .caret{transform:rotate(90deg)}
+    .caret{transition:transform .15s ease}
+
+    /* Month cards */
+    .monthlist{display:grid;gap:14px}
+    .monthcard{border:1px solid rgba(122,215,255,.35);border-radius:16px;padding:14px;background:linear-gradient(180deg,var(--card) 0%, var(--card-2) 100%);box-shadow:var(--shadow)}
+    .monthhead{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+    .monthhead .mbadge{font-weight:700}
+    .monthhead .mrange{padding:2px 8px;border:1px solid rgba(122,215,255,.35);border-radius:999px;font-size:12px;color:var(--muted)}
+
+    /* Countdown */
+    .count-wrap{display:grid;grid-template-columns:1fr .7fr;gap:18px}
+    @media (max-width:980px){.count-wrap{grid-template-columns:1fr}}
+    .count-num{font-size:40px;font-weight:800;letter-spacing:1px}
+    .count-sub{font-size:12px;color:var(--muted)}
 
     /* Print */
     @media print {
@@ -94,9 +123,10 @@
   <header>
     <div class="wrap">
       <div class="topbar">
-        <h1>两周学习打卡 · 增强版</h1>
-        <span class="badge">2025-08-12 → 2025-08-25</span>
-        <span class="badge">本地保存 · 预设日程 · 任务结转</span>
+        <h1>考研倒计时学习系统</h1>
+        <span class="badge">2025-08-12 → 2025-12-20</span>
+        <span class="badge" id="badgeCountdown">D-—</span>
+        <span class="badge">本地保存 · 预设日程 · 自动排程</span>
         <div class="spacer"></div>
         <button id="themeToggle" class="toggle" aria-label="切换主题">🌙/☀️</button>
       </div>
@@ -104,6 +134,25 @@
   </header>
 
   <main>
+    <!-- 倒计时 + 进度 -->
+    <section class="card" style="margin-bottom:18px">
+      <div class="hd"><h2>倒计时与进度</h2></div>
+      <div class="bd count-wrap">
+        <div>
+          <div class="count-num" id="countdownBig">— 天 — 小时 — 分 — 秒</div>
+          <div class="count-sub">距离 <b>2025-12-20</b> 考研（数学一/英一/政治/882）</div>
+          <div class="row" style="margin-top:10px;gap:12px;align-items:center">
+            <div class="kicker">时间进度</div>
+            <div class="progress" style="flex:1;min-width:240px"><i id="timeProgress"></i></div>
+            <div id="timePct" class="kicker">0%</div>
+          </div>
+        </div>
+        <div>
+          <div class="note small">提示：你可以用右侧“月视图”查看任意日期的完成度；用“自动生成整期日程”一键填充从今天到考前的每日预设（周日自动为轻恢复日，强化/冲刺阶段自动安排模拟卷）。</div>
+        </div>
+      </div>
+    </section>
+
     <div class="layout">
       <!-- Left: Today Planner -->
       <section class="card" aria-labelledby="dayTitle">
@@ -119,7 +168,7 @@
           </div>
           <div class="row hide-print">
             <button class="btn" id="btnPrev">←</button>
-            <input id="datePicker" type="date" min="2025-08-12" max="2025-08-25" />
+            <input id="datePicker" type="date" min="2025-08-12" max="2025-12-20" />
             <button class="btn" id="btnNext">→</button>
             <button class="btn primary" id="btnToday">今天</button>
             <button class="btn" id="btnPrint">打印</button>
@@ -146,10 +195,12 @@
               <option value="math">数学加重日</option>
               <option value="major">专业课加重日</option>
               <option value="english">英语写作/精读日</option>
-              <option value="light">轻恢复日（周日推荐）</option>
-              <option value="exam">模拟卷日（临近周末）</option>
+              <option value="light">轻恢复日</option>
+              <option value="exam">模拟卷日</option>
+              <option value="pre">考前日（轻量+检查）</option>
+              <option value="examday">考试日</option>
             </select>
-            <button class="btn" id="btnApplyPreset">应用预设到当天</button>
+            <button class="btn" id="btnApplyPreset">应用到当天</button>
             <button class="btn" id="btnAddTemp">添加临时任务</button>
           </div>
 
@@ -185,18 +236,29 @@
                 <span id="wPolV" class="mono">2</span>
               </div>
             </div>
+            <div class="row" style="gap:10px; margin-top:10px">
+              <button class="btn accent" id="btnAutoPlan">自动生成整期日程</button>
+              <button class="btn ghost" id="btnAutoLight">期末减载（12/11–12/19）</button>
+            </div>
             <div class="note" id="priorityTip" style="margin-top:10px"></div>
           </div>
         </section>
 
         <section class="card" style="margin-bottom:18px">
-          <div class="hd"><h2>周视图（点击跳转）</h2></div>
-          <div class="bd small">
-            <div id="calendar" class="calendar"></div>
-            <div class="row" style="margin-top:10px">
-              <button class="btn" id="btnWeek1">第1周</button>
-              <button class="btn" id="btnWeek2">第2周</button>
+          <div class="hd">
+            <h2>月视图（点击跳转）</h2>
+            <div class="row hide-print">
+              <button class="btn" id="btnMonthPrev">←</button>
+              <span class="pill" id="monthLabel">—</span>
+              <button class="btn" id="btnMonthNext">→</button>
+              <button class="btn" id="btnMonthToday">本月</button>
             </div>
+          </div>
+          <div class="bd small">
+            <div class="cal-head">
+              <div>周一</div><div>周二</div><div>周三</div><div>周四</div><div>周五</div><div>周六</div><div>周日</div>
+            </div>
+            <div id="calendar" class="calendar"></div>
           </div>
         </section>
 
@@ -223,7 +285,7 @@
                 <div class="kicker">康复（肩）</div>
                 <ul class="list">
                   <li>晨：胸椎伸展/开书式 2×10；肩胛前伸/后缩 2×12；颈深屈 3×10（停5s）</li>
-                  <li>午后：弹力带等长外/内旋 各3×12；侧卧外旋 3×12；scaption ≤90° 2×12；胸小肌放松+门框拉伸 2×30s</li>
+                  <li>午后：等长外/内旋 各3×12；侧卧外旋 3×12；scaption ≤90° 2×12；胸小肌放松+门框拉伸 2×30s</li>
                   <li class="muted">忌：过头推举、爆发甩肩、极端外展外旋、倒立负重；若夜间痛↑ → 次日减量50%</li>
                 </ul>
               </div>
@@ -242,38 +304,26 @@
             </div>
             <div class="row" style="gap:8px 10px; margin-top:8px">
               <span class="muted">当前连续打卡：</span><b id="streak">0</b><span class="muted"> 天</span>
-              <span class="muted">· 全期平均完成度：</span><b id="avg">0%</b>
+              <span class="muted">· 平均完成度：</span><b id="avg">0%</b>
             </div>
           </div>
         </section>
       </aside>
     </div>
 
+    <!-- 逐周计划（自动渲染） -->
     <section class="card" style="margin-top:18px">
-      <div class="hd"><h2>两周任务排程（按预设可微调）</h2></div>
+      <div class="hd"><h2>逐周计划（直到考前）</h2></div>
       <div class="bd small">
-        <div class="split">
-          <div>
-            <div class="kicker">第1周｜8/12–8/18</div>
-            <ul class="list">
-              <li>数学：高数18讲 1–4；《660题》各20–30；1000题 A1–A2（中档为主）；线代讲义1–2</li>
-              <li>英语：句句真研每日10句+功能句1条；阅读逻辑1–2章；黄皮书基础试卷1套（拆两天精读）</li>
-              <li>政治：《1000题》马原/毛中特 每日30题；《核心考案》前30–40页</li>
-              <li>专业：信号绪论+基础 每节5–8题；数电 逻辑代数与门电路 20–30题 + 2张卡诺图</li>
-              <li>周日半休：仅英语精读 + 周清（预设建议切换为“轻恢复日”）</li>
-            </ul>
-          </div>
-          <div>
-            <div class="kicker">第2周｜8/19–8/25</div>
-            <ul class="list">
-              <li>数学：高数18讲 5–8；《660题》配套；1000题 A3–A4；线代讲义3–4</li>
-              <li>英语：每日2篇精读；手译本逐句改译；作文主题句每日5–8句</li>
-              <li>政治：《1000题》毛中特/史纲 每日40题；晚间10′概念口述</li>
-              <li>专业：信号 卷积/冲激/拉氏；数组合逻辑（编码器/译码器/加法器）框图与最简式</li>
-              <li>周末：周小结 + 自测20题小卷（信号10 + 数电10）</li>
-            </ul>
-          </div>
-        </div>
+        <div class="weeklist" id="weekContainer"></div>
+      </div>
+    </section>
+
+    <!-- 月计划（自动渲染） -->
+    <section class="card" style="margin-top:18px">
+      <div class="hd"><h2>月计划（阶段目标）</h2></div>
+      <div class="bd small">
+        <div class="monthlist" id="monthContainer"></div>
       </div>
     </section>
   </main>
@@ -281,10 +331,11 @@
   <script>
   ;(()=>{
     const DATE_START='2025-08-12';
-    const DATE_END='2025-08-25';
-    const KEY_PREFIX='studyplan_2025W33-34_';
+    const EXAM_DATE='2025-12-20';
+    const DATE_END=EXAM_DATE; // inclusive
+    const KEY_PREFIX='studyplan_2025_0812_1220_';
 
-    // ===== Presets (which standard tasks are counted) =====
+    // ===== Tasks / Presets =====
     const ALL_TASKS=[
       { id:'wake',   label:'06:45起床、晨间活动完成' },
       { id:'onepage',label:'今日“一页纸计划”已写（3个最重要任务）' },
@@ -294,28 +345,85 @@
       { id:'nap',    label:'午休 ≥ 20 分钟' },
       { id:'D',      label:'学习块D：专业题（50/10×2）' },
       { id:'rehab',  label:'康复训练（下午段）' },
-      { id:'E',      label:'学习块E：政治1000题（≥30/40题）' },
+      { id:'E',      label:'学习块E：政治选择题（≥30/40题）' },
       { id:'F',      label:'学习块F：数学题串/错题回炉（50/10×2）' },
       { id:'G',      label:'学习块G：英语精读/翻译/作文（50/10）' },
       { id:'review', label:'日清：错题登记 + 明日三件事' }
     ];
 
-    const PRESETS={
-      balanced: {name:'均衡日', active:['wake','onepage','A','B','C','nap','D','rehab','E','F','G','review'], note:'均衡推进，保持节律与质量。'},
-      math:     {name:'数学加重日', active:['wake','onepage','A','B','C','nap','D','rehab','F','F2','G','review'], note:'上午A+，晚间F加量；政治可转移到明日。'},
-      major:    {name:'专业课加重日', active:['wake','onepage','A','B','C','nap','D','D2','rehab','E','G','review'], note:'D加量，确保理解+题感；数学回炉适当降载。'},
-      english:  {name:'英语写作/精读日', active:['wake','onepage','A','B','B2','C','nap','D','rehab','G','G2','review'], note:'长难句+写作素材集中突破；A维持。'},
-      light:    {name:'轻恢复日', active:['wake','onepage','B','C','rehab','G','review'], note:'仅进行轻量高质量任务 + 康复 + 周清。'},
-      exam:     {name:'模拟卷日', active:['wake','onepage','mock','rehab','review'], note:'整块模拟：数学或专业课小卷；重在复盘。'}
+    const VIRTUAL={
+      F2:{ id:'F2', label:'数学额外回炉（50/10×1）' },
+      D2:{ id:'D2', label:'专业题额外训练（50/10×1）' },
+      B2:{ id:'B2', label:'英语额外精读/写作（50/10×1）' },
+      mock:{ id:'mock', label:'模拟小卷（60–120min）+ 完整复盘' },
+      lightNote:{ id:'lightNote', label:'轻恢复：高质量精读 + 简短复盘' },
+      prechk:{ id:'prechk', label:'考前检查：证件/文具/路线/酒店/吃住/闹钟' },
+      calm:{ id:'calm', label:'放松：呼吸训练 + 30min 轻松散步' },
+      examdoc:{ id:'examdoc', label:'考试日：证件三件套 + 入场前呼吸放松' },
+      examlog:{ id:'examlog', label:'考后简短复盘（≤10min），补充能量与休息' }
     };
 
-    // Additional virtual tasks used by presets
-    const VIRTUAL={
-      F2:{ id:'F2', label:'数学额外回炉（可选 50/10×1）' },
-      D2:{ id:'D2', label:'专业题额外训练（可选 50/10×1）' },
-      B2:{ id:'B2', label:'英语额外精读/写作（50/10×1）' },
-      mock:{ id:'mock', label:'模拟小卷（60–120min）+ 完整复盘' }
+    const PRESETS={
+      balanced: {name:'均衡日', active:['wake','onepage','A','B','C','nap','D','rehab','E','F','G','review']},
+      math:     {name:'数学加重日', active:['wake','onepage','A','B','C','nap','D','rehab','F','F2','G','review']},
+      major:    {name:'专业课加重日', active:['wake','onepage','A','B','C','nap','D','D2','rehab','E','G','review']},
+      english:  {name:'英语写作/精读日', active:['wake','onepage','A','B','B2','C','nap','D','rehab','G','G2','review']},
+      light:    {name:'轻恢复日', active:['wake','onepage','B','C','rehab','G','lightNote','review']},
+      exam:     {name:'模拟卷日', active:['wake','onepage','mock','rehab','review']},
+      pre:      {name:'考前日', active:['wake','onepage','prechk','calm','review']},
+      examday:  {name:'考试日', active:['examdoc','calm','examlog']}
     };
+
+    // ===== Weekly / Monthly text (auto render) =====
+    // 19周模板（按周序号自适配日期范围）
+    const WEEK_TEXT = [
+      {t:'打底与统览', M:'高数18讲 1–4 + 660题配套', E:'长难句/语法打底；阅读入门1–2章', P:'马原核心 + 选择题一轮', PRO:'信号：分类与系统性质；数电：逻辑代数/门电路', X:'周日轻恢复 + 周清'},
+      {t:'代入与巩固', M:'高数18讲 5–8', E:'阅读定位与同义替换；生词卡', P:'毛中特前半 + 选择题', PRO:'信号：时域运算/微分方程；数电：卡诺图化简', X:'小测10–20题'},
+      {t:'卷积与拉氏', M:'高数18讲 9–12', E:'阅读强化 + 句间逻辑', P:'毛中特后半 + 选择题', PRO:'信号：卷积/冲激响应；数电：组合电路基础', X:'错题本建立'},
+      {t:'高数收官', M:'高数18讲 13–18', E:'翻译练习起步', P:'史纲开篇 + 选择题', PRO:'信号：拉氏变换性质；数电：编码器/译码器/加法器', X:'周末小卷（专业20题）'},
+      {t:'线代起步', M:'线代基础 1–3 + 660题', E:'阅读真题 2005–2007', P:'史纲后半 + 选择题', PRO:'信号：傅里叶级数/变换基础；数电：触发器入门', X:'周清：薄弱点TOP3'},
+      {t:'线代进阶', M:'线代 4–6 + 660题', E:'阅读真题 2008–2010', P:'思修法基 + 选择题', PRO:'信号：傅里叶性质与常见信号；数电：时序分析与状态机', X:'周末小卷（信号10+数电10）'},
+      {t:'概统梳理', M:'概率统计 1–2 + 660题', E:'阅读真题 2011–2013', P:'背诵手册框架建立', PRO:'信号：采样/调制初步；数电：寄存器/计数器', X:'错题回炉'},
+      {t:'题感建立', M:'张宇1000题 综合（一）', E:'阅读真题 2014–2016', P:'选择题巩固 + 错题集', PRO:'信号：Z 变换与离散系统；数电：Moore/Mealy 设计', X:'周末限时小卷'},
+      {t:'综合训练', M:'张宇1000题 综合（二）', E:'阅读真题 2017–2019', P:'时政初读', PRO:'信号：频域综合小结；数电：综合练习', X:'周测+复盘'},
+      {t:'真题一刷 1', M:'真题 2009–2011 一刷', E:'阅读真题 2020–2021', P:'选择题集一轮', PRO:'信号真题（基础题）一刷；数电真题（组合）一刷', X:'限时/判卷标准化'},
+      {t:'真题一刷 2', M:'真题 2012–2014 一刷', E:'阅读真题 2022–2024', P:'主观题框架建立', PRO:'信号真题（进阶）一刷；数电真题（时序）一刷', X:'错题分类标签'},
+      {t:'真题一刷 3', M:'真题 2015–2017 一刷', E:'新题型/完型专项', P:'选择题二轮 + 错题', PRO:'信号真题（综合）一刷；数电真题（综合）一刷', X:'模拟卷日×1'},
+      {t:'真题一刷 4', M:'真题 2018–2020 一刷', E:'翻译/写作模板定稿', P:'主观题素材补充', PRO:'信号/数电二刷易错', X:'周末整卷×1'},
+      {t:'真题一刷 5', M:'真题 2021–2024 一刷', E:'全真卷1（英一）', P:'选择题巩固 + 时政', PRO:'典型系统分析/关键波形专题', X:'限时模拟+复盘'},
+      {t:'冲刺卷 1', M:'套卷1（限时）', E:'全真卷2（英一）', P:'全真卷1', PRO:'全卷模拟1（882）', X:'按失分清单回炉'},
+      {t:'冲刺卷 2', M:'套卷2–3', E:'全真卷3', P:'全真卷2', PRO:'全卷模拟2', X:'错因闭环（知识/粗心/策略）'},
+      {t:'查漏补缺', M:'套卷4–5 + 错题二刷', E:'词组/翻译高频回顾', P:'全真卷3 + 查漏', PRO:'全卷回顾 + 易错清单', X:'建立考前 A4 摘要'},
+      {t:'封印期·稳态', M:'公式手册+错题清单轻量回顾', E:'作文押题默写', P:'主观题押题背诵一轮', PRO:'高频考点轻练', X:'作息前置，减少强度'},
+      {t:'考前一周', M:'高频题型最后回看（≤2h/日）', E:'模板默写 + 简短阅读', P:'选择/主观错题回炉', PRO:'公式/定理/法则轻量浏览', X:'12/19 为考前日，减载与检查'}
+    ];
+
+    const MONTH_TEXT=[
+      {m:'8月（剩余）',r:'8/12–8/31',points:[
+        '建立作息与番茄节律；完成《高数18讲》1–12 及配套 660 题。',
+        '信号学到卷积与拉氏；数电到组合电路；政治与英语开启按日推进。'
+      ]},
+      {m:'9月',r:'9/1–9/30',points:[
+        '高数收官并转线代/概统；张宇1000题起量。',
+        '信号进傅里叶与采样；数电进入时序、状态机。',
+        '政治完成选择题一轮；英语阅读真题覆盖 2005–2013。'
+      ]},
+      {m:'10月',r:'10/1–10/31',points:[
+        '数学真题一刷（2009–2016）；错题本成型。',
+        '专业课真题一刷（按题型分块）。',
+        '英语阅读真题至 2021；翻译与写作模板定稿。'
+      ]},
+      {m:'11月',r:'11/1–11/30',points:[
+        '进入整卷模拟与策略优化（每周≥2套）。',
+        '政治主观题框架+材料题练习；时政更新。',
+        '专业课全卷2次/周，定位稳定失分点并闭环。'
+      ]},
+      {m:'12月（冲刺）',r:'12/1–12/20',points:[
+        '前10天完成套卷4–5 与错题二刷；12/11起减载稳态。',
+        '建立 A4 最终摘要（数学/英语模板/政治要点/882公式清单）。',
+        '12/19 为考前日：只做检查与放松，保证睡眠。'
+      ]}
+    ];
 
     // ===== DOM =====
     const $=s=>document.querySelector(s);
@@ -330,154 +438,156 @@
     const elDayNote=$('#dayNote');
     const elAdvice=$('#adviceBox');
     const elCalendar=$('#calendar');
+    const elMonthLabel=$('#monthLabel');
+    const elBadgeCountdown=$('#badgeCountdown');
+    const elCountdownBig=$('#countdownBig');
+    const elTimeBar=$('#timeProgress');
+    const elTimePct=$('#timePct');
 
     // ===== Theme =====
     const themeBtn=$('#themeToggle');
     const THEME_KEY='studyplan_theme';
     function applyTheme(t){ document.documentElement.setAttribute('data-theme', t); localStorage.setItem(THEME_KEY,t); }
-    themeBtn.addEventListener('click',()=>{
-      const cur=document.documentElement.getAttribute('data-theme')||'dark';
-      applyTheme(cur==='dark'?'light':'dark');
-    });
+    themeBtn.addEventListener('click',()=>{ const cur=document.documentElement.getAttribute('data-theme')||'dark'; applyTheme(cur==='dark'?'light':'dark'); });
     applyTheme(localStorage.getItem(THEME_KEY)||'dark');
 
     // ===== Storage helpers =====
     function storageKey(d){return KEY_PREFIX+d}
     function emptyDay(){ return { tasks:{}, custom:[], active:[], preset:'balanced' } }
     function clampDate(d){ if(d<DATE_START) return DATE_START; if(d>DATE_END) return DATE_END; return d; }
-    function weekIndex(d){ return (new Date(d) <= new Date('2025-08-18'))?1:2 }
 
     function loadDay(d){
       const raw=localStorage.getItem(storageKey(d));
       let data= emptyDay();
       if(raw){ try{ data=Object.assign(emptyDay(), JSON.parse(raw)); }catch(e){} }
-      // Backfill defaults
       if(!data.active || !data.active.length){ data.active=[...PRESETS.balanced.active]; }
       if(!data.preset) data.preset='balanced';
-      // Ensure standard tasks exist
       [...ALL_TASKS, ...Object.values(VIRTUAL)].forEach(t=>{ if(!(t.id in data.tasks)) data.tasks[t.id]=false; });
       return data;
     }
     function saveDay(d,data){ localStorage.setItem(storageKey(d), JSON.stringify(data)); }
 
-    // ===== Rendering =====
+    // ===== Date helpers =====
+    const allDates = (function(){ const res=[]; const s=new Date(DATE_START), e=new Date(DATE_END); for(let d=new Date(s); d<=e; d.setDate(d.getDate()+1)) res.push(d.toISOString().slice(0,10)); return res; })();
     function fmtDate(d){ const dt=new Date(d+'T00:00:00'); const w=['周日','周一','周二','周三','周四','周五','周六'][dt.getDay()]; const [y,m,dd]=d.split('-'); return `${y}-${m}-${dd}（${w}）`; }
+    function weekIndex(d){ const ms=(new Date(d)-new Date(DATE_START)); return Math.floor(ms/86400000/7)+1 }
 
-    const DAY_HINTS={
-      '2025-08-17':'第1周周日·半休：建议切换“轻恢复日” + 周清单复盘 30–40 分钟。',
-      '2025-08-24':'第2周周日·总结：周小结 + 自测 20 题小卷（信号10 + 数电10）。'
-    };
-
-    function setCurrentDate(d){
-      d=clampDate(d); window.__currentDate=d; elDatePicker.value=d; elDatePill.textContent=fmtDate(d);
-      elWeekPill.textContent=`第${weekIndex(d)}周`;
-      elHintPill.textContent=(new Date(d).toDateString()===new Date().toDateString())?'今天':'计划内日期';
-      renderTasks(d); renderCalendar(); updateStats();
-    }
-
+    // ===== Today pane =====
     function activeTasksForDay(data){
-      const base = [...ALL_TASKS];
-      const extras = data.active.filter(id=>!(base.find(t=>t.id===id))).map(id=>VIRTUAL[id]).filter(Boolean);
-      const map = new Map([...base, ...extras].map(t=>[t.id,t]));
-      // Keep the order according to ALL_TASKS first, then extras in the order of active[]
+      const base=[...ALL_TASKS];
+      const extras=data.active.filter(id=>!(base.find(t=>t.id===id))).map(id=>VIRTUAL[id]).filter(Boolean);
+      const map=new Map([...base, ...extras].map(t=>[t.id,t]));
       const ordered=[...ALL_TASKS.map(t=>t.id).filter(id=>data.active.includes(id)), ...data.active.filter(id=>!ALL_TASKS.find(t=>t.id===id))];
       return ordered.map(id=>map.get(id)).filter(Boolean);
     }
 
     function renderTasks(d){
       const data=loadDay(d);
-      elPresetPill.textContent = '预设：' + (PRESETS[data.preset]?.name||'—');
-
-      // Advice based on weights
+      elPresetPill.textContent='预设：'+(PRESETS[data.preset]?.name||'—');
       renderAdvice();
-
-      elTasks.innerHTML=''; const frag=document.createDocumentFragment();
+      elTasks.innerHTML='';
+      const frag=document.createDocumentFragment();
       const mk=(t,isCustom=false)=>{
-        const item=document.createElement('label'); item.className='task'; item.dataset.id=t.id;
-        const checked = !!data.tasks[t.id];
-        item.innerHTML=`<input type="checkbox" ${checked?'checked':''} aria-label="${t.label}"><div class="label">${t.label}${isCustom?' <span class="muted">（自定义）</span>':''}</div>${isCustom?'<button class="btn small ghost" data-del>删除</button>':''}`;
-        item.querySelector('input').addEventListener('change',e=>{ data.tasks[t.id]=e.target.checked; saveDay(d,data); updateProgress(d); renderCalendar(); updateStats(); });
+        const item=document.createElement('label'); item.className='task'; item.dataset.id=t.id; const checked=!!data.tasks[t.id];
+        item.innerHTML=`<input type="checkbox" ${checked?'checked':''} aria-label="${t.label}"><div class="label">${t.label}${isCustom?' <span class=\"muted\">（自定义）</span>':''}</div>${isCustom?'<button class="btn small ghost" data-del>删除</button>':''}`;
+        item.querySelector('input').addEventListener('change',e=>{ data.tasks[t.id]=e.target.checked; saveDay(d,data); updateProgress(d); renderMonth(); updateStats(); });
         if(isCustom){ item.querySelector('[data-del]')?.addEventListener('click',()=>{ if(!confirm('删除该自定义任务？')) return; data.custom=data.custom.filter(x=>x.id!==t.id); delete data.tasks[t.id]; saveDay(d,data); renderTasks(d); }); }
         frag.appendChild(item);
       };
-
-      // Standard active tasks
       activeTasksForDay(data).forEach(t=> mk(t,false));
-      // Custom tasks
       data.custom.forEach(t=> mk(t,true));
-
       elTasks.appendChild(frag);
-      // Day notes
-      if(DAY_HINTS[d]){ elDayNote.style.display='block'; elDayNote.textContent=DAY_HINTS[d]; } else { elDayNote.style.display='none'; elDayNote.textContent=''; }
       updateProgress(d);
+      elDayNote.style.display='none'; elDayNote.textContent='';
     }
 
     function updateProgress(d){
-      const data=loadDay(d);
-      const ids=[...data.active, ...data.custom.map(t=>t.id)];
+      const data=loadDay(d); const ids=[...data.active, ...data.custom.map(t=>t.id)];
       const total=ids.length||1; const done=ids.filter(id=>data.tasks[id]).length; const pct=Math.round(done*100/total);
       elBar.style.width=pct+'%'; elPct.textContent=pct+'%';
     }
 
-    // ===== Calendar & Stats =====
-    const allDates = (function(){ const res=[]; const s=new Date(DATE_START), e=new Date(DATE_END); for(let d=new Date(s); d<=e; d.setDate(d.getDate()+1)) res.push(d.toISOString().slice(0,10)); return res; })();
+    function setCurrentDate(d){ d=clampDate(d); window.__currentDate=d; elDatePicker.value=d; elDatePill.textContent=fmtDate(d); elWeekPill.textContent=`第${weekIndex(d)}周`; elHintPill.textContent=(new Date(d).toDateString()===new Date().toDateString())?'今天':'计划内日期'; renderTasks(d); renderMonth(); updateStats(); }
+    function todayInRange(){ const t=new Date().toISOString().slice(0,10); if(t<DATE_START||t>DATE_END) return DATE_START; return t; }
 
-    function renderCalendar(range){
+    // ===== Calendar (monthly) =====
+    let currentMonth=(new Date(todayInRange())).toISOString().slice(0,7); // YYYY-MM
+
+    function monthRange(ym){ const [y,m]=ym.split('-').map(Number); const first=new Date(y,m-1,1); const next=new Date(y,m,1); const last=new Date(next-1); return {first,last}; }
+    function ymAdd(ym,delta){ let [y,m]=ym.split('-').map(Number); m+=delta; while(m>12){y++;m-=12} while(m<1){y--;m+=12} return `${y}-${String(m).padStart(2,'0')}` }
+
+    function renderMonth(){
+      const {first,last}=monthRange(currentMonth); elMonthLabel.textContent=`${currentMonth} 月`;
       elCalendar.innerHTML='';
-      const dates = range==='w2'? allDates.slice(7): allDates.slice(0,7);
-      dates.forEach(d=>{
-        const cell=document.createElement('div'); cell.className='daycell'; if(d===window.__currentDate) cell.classList.add('today');
-        const data=loadDay(d); const ids=[...data.active, ...data.custom.map(t=>t.id)]; const total=ids.length||1; const done=ids.filter(id=>data.tasks[id]).length; const pct=Math.round(done*100/total);
-        cell.innerHTML=`<div>${d.slice(5)}<div class="muted small">${['日','一','二','三','四','五','六'][new Date(d).getDay()]}</div></div><div class="bar"><i style="width:${pct}%"></i></div>`;
-        cell.title=`完成度 ${pct}%`;
-        cell.addEventListener('click',()=> setCurrentDate(d));
-        elCalendar.appendChild(cell);
+      // Monday-first alignment
+      const startIdx = (first.getDay()+6)%7; // 0 for Monday
+      const totalDays = last.getDate();
+      const cells = [];
+      // previous month placeholders
+      for(let i=0;i<startIdx;i++){ cells.push(null); }
+      for(let d=1; d<=totalDays; d++){ cells.push(new Date(first.getFullYear(), first.getMonth(), d)); }
+      // render
+      cells.forEach(dt=>{
+        const div=document.createElement('div'); div.className='daycell';
+        if(!dt){ div.classList.add('out'); div.innerHTML='<div class="date"> </div><div class="bar"><i style="width:0%"></i></div>'; elCalendar.appendChild(div); return; }
+        const ds=dt.toISOString().slice(0,10);
+        const data=loadDay(ds); const ids=[...data.active, ...data.custom.map(t=>t.id)]; const total=ids.length||1; const done=ids.filter(id=>data.tasks[id]).length; const pct=Math.round(done*100/total);
+        const isOut = (ds<DATE_START || ds>DATE_END);
+        if(isOut) div.classList.add('out');
+        if(ds===window.__currentDate) div.classList.add('today');
+        div.innerHTML=`<div class="date">${String(dt.getDate()).padStart(2,'0')}</div><div class="bar"><i style="width:${pct}%"></i></div>`;
+        if(!isOut){ div.title=`${ds} 完成度 ${pct}%`; div.addEventListener('click',()=> setCurrentDate(ds)); }
+        elCalendar.appendChild(div);
       });
     }
 
+    $('#btnMonthPrev').addEventListener('click',()=>{ currentMonth=ymAdd(currentMonth,-1); renderMonth(); });
+    $('#btnMonthNext').addEventListener('click',()=>{ currentMonth=ymAdd(currentMonth,1); renderMonth(); });
+    $('#btnMonthToday').addEventListener('click',()=>{ currentMonth=(new Date(todayInRange())).toISOString().slice(0,7); renderMonth(); });
+
+    // ===== Stats =====
     function updateStats(){
-      // streak
-      let streak=0; let curDate=new Date(window.__currentDate||DATE_START);
-      while(true){
-        const d=curDate.toISOString().slice(0,10); if(d<DATE_START) break;
-        const data=loadDay(d); const ids=[...data.active, ...data.custom.map(t=>t.id)]; const total=ids.length||1; const done=ids.filter(id=>data.tasks[id]).length; const pct=done*100/total;
-        if(pct>=60) { streak++; curDate.setDate(curDate.getDate()-1); } else break;
-      }
+      // streak from current day backward where pct>=60
+      let streak=0; let cur=new Date(window.__currentDate||DATE_START);
+      while(true){ const d=cur.toISOString().slice(0,10); if(d<DATE_START) break; const data=loadDay(d); const ids=[...data.active, ...data.custom.map(t=>t.id)]; const total=ids.length||1; const done=ids.filter(id=>data.tasks[id]).length; const pct=done*100/total; if(pct>=60){ streak++; cur.setDate(cur.getDate()-1);} else break; }
       $('#streak').textContent=streak;
-      // avg
+      // average
       let sum=0; allDates.forEach(d=>{ const data=loadDay(d); const ids=[...data.active, ...data.custom.map(t=>t.id)]; const total=ids.length||1; const done=ids.filter(id=>data.tasks[id]).length; sum += Math.round(done*100/total); });
-      const avg=Math.round(sum / allDates.length); $('#avg').textContent=avg+'%';
+      $('#avg').textContent=Math.round(sum/allDates.length)+'%';
     }
 
     // ===== Preset application =====
     const presetSelect=$('#presetSelect');
-    function applyPresetToDate(presetName,d){
-      const data=loadDay(d); const preset=PRESETS[presetName]||PRESETS.balanced; data.preset=presetName; data.active=[...preset.active]; saveDay(d,data); renderTasks(d); renderCalendar(); updateStats(); }
-
+    function applyPresetToDate(presetName,d){ const data=loadDay(d); const preset=PRESETS[presetName]||PRESETS.balanced; data.preset=presetName; data.active=[...preset.active]; saveDay(d,data); renderTasks(d); renderMonth(); updateStats(); }
     $('#btnApplyPreset').addEventListener('click',()=> applyPresetToDate(presetSelect.value, window.__currentDate));
 
-    // Default Sundays to light preset
-    function autoPreset(d){ const day=new Date(d+'T00:00:00').getDay(); if(day===0){ applyPresetToDate('light', d); } }
-
-    // ===== Rollover =====
-    $('#btnRollover').addEventListener('click',()=>{
-      const cur=window.__currentDate; const next = new Date(cur); next.setDate(next.getDate()+1); const nd=next.toISOString().slice(0,10); if(nd>DATE_END){ alert('已到最后一天，无法结转。'); return; }
-      const data=loadDay(cur); const undone=[...data.active, ...data.custom.map(t=>t.id)].filter(id=>!data.tasks[id]).map(id=> id.startsWith('custom_')? data.custom.find(x=>x.id===id)?.label : (ALL_TASKS.find(t=>t.id===id)?.label || VIRTUAL[id]?.label)).filter(Boolean);
-      if(!undone.length){ alert('今日无未完成任务。'); return; }
-      const nextData=loadDay(nd);
-      undone.forEach((label)=>{ const id='custom_'+Date.now()+Math.random().toString(16).slice(2,6); nextData.custom.push({id, label:'补做：'+label}); nextData.tasks[id]=false; });
-      saveDay(nd,nextData); alert('已结转到 '+nd+' 的自定义任务。'); renderCalendar();
+    // 自动生成整期日程（分阶段策略）
+    function autoPlan(){
+      const plan=[
+        {s:'2025-08-12', e:'2025-09-15', map:{1:'math',2:'major',3:'balanced',4:'major',5:'balanced',6:'balanced',0:'light'}}, // 基础
+        {s:'2025-09-16', e:'2025-10-31', map:{1:'math',2:'major',3:'balanced',4:'major',5:'exam',6:'balanced',0:'light'}},     // 强化（周五模拟）
+        {s:'2025-11-01', e:'2025-12-10', map:{1:'math',2:'major',3:'exam',4:'major',5:'exam',6:'balanced',0:'light'}},         // 冲刺（周三/周五模拟）
+        {s:'2025-12-11', e:'2025-12-19', map:{1:'light',2:'light',3:'light',4:'light',5:'pre',6:'light',0:'light'}}            // 封印期
+      ];
+      allDates.forEach(d=>{
+        const day=new Date(d+'T00:00:00').getDay();
+        for(const ph of plan){ if(d>=ph.s && d<=ph.e){ applyPresetToDate(ph.map[day], d); break; }}
+      });
+      // 考试日
+      applyPresetToDate('examday', EXAM_DATE);
+      alert('已为 8/12–12/20 自动生成每日预设。');
+    }
+    $('#btnAutoPlan').addEventListener('click', autoPlan);
+    $('#btnAutoLight').addEventListener('click', ()=>{
+      const s='2025-12-11', e='2025-12-19';
+      allDates.filter(d=> d>=s && d<=e).forEach(d=> applyPresetToDate('light', d));
+      alert('已对 12/11–12/19 应用「期末减载」。');
     });
 
     // ===== Priority advice from weights =====
     const wMath=$('#wMath'), wMajor=$('#wMajor'), wEng=$('#wEng'), wPol=$('#wPol');
     const wMathV=$('#wMathV'), wMajorV=$('#wMajorV'), wEngV=$('#wEngV'), wPolV=$('#wPolV');
-    function renderAdvice(){
-      const W={M:+wMath.value, J:+wMajor.value, E:+wEng.value, P:+wPol.value};
-      wMathV.textContent=W.M; wMajorV.textContent=W.J; wEngV.textContent=W.E; wPolV.textContent=W.P;
-      const order=[{k:'数学A/F',v:W.M},{k:'专业C/D',v:W.J},{k:'英语B/G',v:W.E},{k:'政治E',v:W.P}].sort((a,b)=>b.v-a.v).map(x=>x.k).join(' → ');
-      elAdvice.style.display='block'; elAdvice.innerHTML=`<b>今日优先顺序：</b>${order} <span class="muted">（权重可在右侧调整）</span>`;
-    }
+    function renderAdvice(){ const W={M:+wMath.value, J:+wMajor.value, E:+wEng.value, P:+wPol.value}; wMathV.textContent=W.M; wMajorV.textContent=W.J; wEngV.textContent=W.E; wPolV.textContent=W.P; const order=[{k:'数学A/F',v:W.M},{k:'专业C/D',v:W.J},{k:'英语B/G',v:W.E},{k:'政治E',v:W.P}].sort((a,b)=>b.v-a.v).map(x=>x.k).join(' → '); elAdvice.style.display='block'; elAdvice.innerHTML=`<b>今日优先顺序：</b>${order} <span class="muted">（权重可在右侧调整）</span>`; }
     [wMath,wMajor,wEng,wPol].forEach(el=> el.addEventListener('input', ()=> renderAdvice()));
 
     // ===== Top controls =====
@@ -486,31 +596,51 @@
     $('#btnNext').addEventListener('click',()=>{ const cur=new Date(window.__currentDate); cur.setDate(cur.getDate()+1); setCurrentDate(cur.toISOString().slice(0,10)); });
     $('#datePicker').addEventListener('change',e=> setCurrentDate(e.target.value||DATE_START));
     $('#btnPrint').addEventListener('click',()=> window.print());
-    $('#btnMarkAll').addEventListener('click',()=>{ const d=window.__currentDate; const data=loadDay(d); [...data.active, ...data.custom.map(t=>t.id)].forEach(id=> data.tasks[id]=true); saveDay(d,data); renderTasks(d); renderCalendar(); updateStats(); });
-    $('#btnClear').addEventListener('click',()=>{ const d=window.__currentDate; const data=loadDay(d); [...data.active, ...data.custom.map(t=>t.id)].forEach(id=> data.tasks[id]=false); saveDay(d,data); renderTasks(d); renderCalendar(); updateStats(); });
+    $('#btnMarkAll').addEventListener('click',()=>{ const d=window.__currentDate; const data=loadDay(d); [...data.active, ...data.custom.map(t=>t.id)].forEach(id=> data.tasks[id]=true); saveDay(d,data); renderTasks(d); renderMonth(); updateStats(); });
+    $('#btnClear').addEventListener('click',()=>{ const d=window.__currentDate; const data=loadDay(d); [...data.active, ...data.custom.map(t=>t.id)].forEach(id=> data.tasks[id]=false); saveDay(d,data); renderTasks(d); renderMonth(); updateStats(); });
 
-    $('#btnWeek1').addEventListener('click',()=>{ renderCalendar('w1'); setCurrentDate('2025-08-12'); });
-    $('#btnWeek2').addEventListener('click',()=>{ renderCalendar('w2'); setCurrentDate('2025-08-19'); });
+    $('#btnExport').addEventListener('click',()=>{ const all={}; allDates.forEach(d=>{ const raw=localStorage.getItem(storageKey(d)); if(raw) all[d]=JSON.parse(raw); }); const blob=new Blob([JSON.stringify(all,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='studyplan_2025_0812_1220.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000); });
+    $('#fileImport').addEventListener('change',e=>{ const f=e.target.files[0]; if(!f) return; const reader=new FileReader(); reader.onload=()=>{ try{ const data=JSON.parse(reader.result); Object.keys(data||{}).forEach(d=>{ if(d>=DATE_START&&d<=DATE_END){ localStorage.setItem(storageKey(d), JSON.stringify(data[d])); }}); alert('导入完成'); renderTasks(window.__currentDate); renderMonth(); updateStats(); }catch(err){ alert('导入失败：格式错误'); } }; reader.readAsText(f); e.target.value=''; });
+    $('#btnResetAll').addEventListener('click',()=>{ if(!confirm('清空 8/12–12/20 期间所有数据？')) return; allDates.forEach(d=> localStorage.removeItem(storageKey(d))); renderTasks(window.__currentDate); renderMonth(); updateStats(); });
+    $('#btnAddTemp').addEventListener('click',()=>{ const text=prompt('输入临时任务内容：'); if(!text) return; const d=window.__currentDate; const data=loadDay(d); const id='custom_'+Date.now(); data.custom.push({id,label:text.trim()}); data.tasks[id]=false; saveDay(d,data); renderTasks(d); renderMonth(); updateStats(); });
 
-    $('#btnExport').addEventListener('click',()=>{
-      const all={}; allDates.forEach(d=>{ const raw=localStorage.getItem(storageKey(d)); if(raw) all[d]=JSON.parse(raw); });
-      const blob=new Blob([JSON.stringify(all,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='studyplan_2025W33-34.json'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-    });
-    $('#fileImport').addEventListener('change',e=>{ const f=e.target.files[0]; if(!f) return; const reader=new FileReader(); reader.onload=()=>{ try{ const data=JSON.parse(reader.result); Object.keys(data||{}).forEach(d=>{ if(d>=DATE_START&&d<=DATE_END){ localStorage.setItem(storageKey(d), JSON.stringify(data[d])); }}); alert('导入完成'); renderTasks(window.__currentDate); renderCalendar(); updateStats(); }catch(err){ alert('导入失败：格式错误'); } }; reader.readAsText(f); e.target.value=''; });
+    // ===== Countdown & Time progress =====
+    function updateCountdown(){
+      const now=new Date(); const end=new Date(EXAM_DATE+'T09:00:00'); // 以考试上午为参考
+      const ms=end-now; const days=Math.max(0, Math.floor(ms/86400000)); const hours=Math.max(0, Math.floor((ms%86400000)/3600000)); const mins=Math.max(0, Math.floor((ms%3600000)/60000)); const secs=Math.max(0, Math.floor((ms%60000)/1000));
+      elBadgeCountdown.textContent='D-'+days; elCountdownBig.textContent=`${days} 天 ${String(hours).padStart(2,'0')} 小时 ${String(mins).padStart(2,'0')} 分 ${String(secs).padStart(2,'0')} 秒`;
+      const totalMs=new Date(EXAM_DATE+'T00:00:00')-new Date(DATE_START+'T00:00:00'); const goneMs=now - new Date(DATE_START+'T00:00:00'); const pct=Math.min(100, Math.max(0, Math.round(goneMs*100/totalMs)));
+      elTimeBar.style.width=pct+'%'; elTimePct.textContent=pct+'%';
+    }
+    setInterval(updateCountdown,1000); updateCountdown();
 
-    $('#btnResetAll').addEventListener('click',()=>{ if(!confirm('清空 8/12–8/25 期间所有数据？')) return; allDates.forEach(d=> localStorage.removeItem(storageKey(d))); renderTasks(window.__currentDate); renderCalendar(); updateStats(); });
+    // ===== Week cards render =====
+    function pad(n){return String(n).padStart(2,'0')}
+    function mkRange(i){ const s=new Date(DATE_START); s.setDate(s.getDate()+i*7); const e=new Date(s); e.setDate(e.getDate()+6); const cap = e>new Date(DATE_END)? new Date(DATE_END):e; return `${pad(s.getMonth()+1)}/${pad(s.getDate())}–${pad(cap.getMonth()+1)}/${pad(cap.getDate())}` }
+    function renderWeeks(){
+      const box=$('#weekContainer'); box.innerHTML='';
+      const weeks = Math.ceil((new Date(DATE_END)-new Date(DATE_START))/86400000/7)+1;
+      for(let i=0;i<weeks;i++){
+        const wt=WEEK_TEXT[i]||WEEK_TEXT[WEEK_TEXT.length-1];
+        const det=document.createElement('details'); det.className='weekcard'; if(i<3) det.setAttribute('open','open');
+        det.innerHTML=`<summary class="weekhead"><span class="caret">▶</span><span class="wbadge">W${i+1}</span><span class="weektitle">${mkRange(i)} · ${wt.t}</span><span class="range">7天</span></summary>
+        <ul class="wklist">
+          <li><b>数学</b>：${wt.M}</li>
+          <li><b>英语</b>：${wt.E}</li>
+          <li><b>政治</b>：${wt.P}</li>
+          <li><b>专业</b>：${wt.PRO}</li>
+          <li><b>本周</b>：${wt.X}</li>
+        </ul>`;
+        box.appendChild(det);
+      }
+    }
 
-    $('#btnAddTemp').addEventListener('click',()=>{ const text=prompt('输入临时任务内容：'); if(!text) return; const d=window.__currentDate; const data=loadDay(d); const id='custom_'+Date.now(); data.custom.push({id,label:text.trim()}); data.tasks[id]=false; saveDay(d,data); renderTasks(d); renderCalendar(); updateStats(); });
-
-    function todayInRange(){ const t=new Date().toISOString().slice(0,10); if(t<DATE_START||t>DATE_END) return DATE_START; return t; }
+    // ===== Month cards render =====
+    function renderMonths(){ const box=$('#monthContainer'); box.innerHTML=''; MONTH_TEXT.forEach((m,i)=>{ const div=document.createElement('div'); div.className='monthcard'; div.innerHTML=`<div class="monthhead"><span class="mbadge">${m.m}</span><span class="mrange">${m.r}</span></div><ul class="wklist">${m.points.map(p=>`<li>${p}</li>`).join('')}</ul>`; box.appendChild(div); }); }
 
     // ===== Init =====
-    const initial = todayInRange();
-    // Auto set Sunday presets once if blank
-    allDates.forEach(d=>{ const data=loadDay(d); if(!localStorage.getItem(storageKey(d))){ if(new Date(d+'T00:00:00').getDay()===0){ data.preset='light'; data.active=[...PRESETS.light.active]; saveDay(d,data); } }});
-    setCurrentDate(initial);
-    autoPreset(initial);
-    renderAdvice();
+    const initial=todayInRange(); setCurrentDate(initial); currentMonth=(new Date(initial)).toISOString().slice(0,7); renderMonth(); renderAdvice(); renderWeeks(); renderMonths();
+
   })();
   </script>
 </body>
